@@ -2,18 +2,6 @@
 #define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 #include <string>
-#include "Aluminum/Includes.hpp"
-#include "Aluminum/Program.hpp"
-#include "Aluminum/MeshBuffer.hpp"
-#include "Aluminum/MeshData.hpp"
-#include "Aluminum/Shapes.hpp"
-#include "Aluminum/Camera.hpp"
-#include "Aluminum/Utils.hpp"
-#include "Aluminum/MeshUtils.hpp"
-#include "Aluminum/FBO.hpp"
-#include "Aluminum/Behavior.hpp"
-#include "Aluminum/ResourceHandler.hpp"
-#include "Aluminum/Texture.hpp"
 
 
 #ifdef TARGET_OS_MAC // MAC
@@ -21,6 +9,18 @@
 	// TODO: Include Mac Headers here
 #elif defined __linux__ // LINUX
 	std::string platform = "LINUX";
+	#include "Aluminum/Includes.hpp"
+	#include "Aluminum/Program.hpp"
+	#include "Aluminum/MeshBuffer.hpp"
+	#include "Aluminum/MeshData.hpp"
+	#include "Aluminum/Shapes.hpp"
+	#include "Aluminum/Camera.hpp"
+	#include "Aluminum/Utils.hpp"
+	#include "Aluminum/MeshUtils.hpp"
+	#include "Aluminum/FBO.hpp"
+	#include "Aluminum/Behavior.hpp"
+	#include "Aluminum/ResourceHandler.hpp"
+	#include "Aluminum/Texture.hpp"
 	#include "Aluminum/Renderer.hpp"
 #elif defined _WIN32 || defined _WIN64
 	std::string platform = "WINDOWS";
@@ -72,6 +72,13 @@ public:
   
   vec3 l2_diffuse = vec3(0.0,0.0,1.0);
   vec3 l2_specular = vec3(1.0,1.0,1.0);
+	
+  
+	SPH fluidsimulation = SPH(20); // Initialize Fluid simulation model with 20 particles
+		
+	
+	unsigned stepCounter = 0; // TODO: remove - step counter that keeps track of how many timesteps have been done - model stops after certain number of steps
+	
 
 
 	float dpsi = 0.1;
@@ -104,6 +111,15 @@ public:
 		glEnable(GL_DEPTH_TEST);
 		glViewport(0,0,width,height);
 
+		
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		// Initialize Fluid Simulation Model
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		std::cout << "\nModel Parameters after Initialization:\n" << fluidsimulation;
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////
+
 	}
 
     void loadProgram(Program &p, const std::string& name) {
@@ -122,6 +138,43 @@ public:
 
 
 	void onFrame(){
+
+		///////////////////////////////////////////////////////////
+		// PROPAGATE MODEL
+		///////////////////////////////////////////////////////////
+
+		if(stepCounter < 50) {
+
+			fluidsimulation.timestep(1); // Propagate fluidsimulation in time
+			std::cout << "\nTimestep " << stepCounter << fluidsimulation; // Output current status of Fluid particles
+
+			++stepCounter;
+		}
+	
+		// Getting position data for rendering
+		/*
+
+			unsigned M = 5;
+
+			float* X = new float[3*M];
+			float* V = new float[3*M];
+
+			for(unsigned i=0; i<M; ++i) {
+				fluidsimulation.getPosition(i,(X+3*i));
+				fluidsimulation.getVelocity(i,(V+3*i));
+			}
+
+			// TODO: position = position, velocity = colorcoded
+			// TODO: opengl: allow switching from particle view to grid view
+
+			delete[] V;
+			delete[] X;
+		*/
+		
+
+		///////////////////////////////////////////////////////////
+
+
  
 		if (camera.isTransformed) {
 			camera.transform();
@@ -241,37 +294,6 @@ public:
 int main(){ 
 
 
-	SPH fluidsimulation = SPH(20);
-
-	std::cout << "\nModel Parameters after Initialization:\n" << fluidsimulation;
-
-
-	// Propagate fluidsimulation in time
-	for(unsigned i=0; i<4; ++i) {
-
-		fluidsimulation.timestep(.1);
-		std::cout << "\nTimestep " << i << fluidsimulation;
-
-	}
-
-
-	unsigned M = 5;
-
-	float* X = new float[3*M];
-	float* V = new float[3*M];
-
-	for(unsigned i=0; i<M; ++i) {
-		fluidsimulation.getPosition(i,(X+3*i));
-		fluidsimulation.getVelocity(i,(V+3*i));
-	}
-
-	// TODO: position = position, velocity = colorcoded
-	// TODO: opengl: allow switching from particle view to grid view
-
-	delete[] V;
-	delete[] X;
-
-	
 	std::cout << "\n\nRunning on Platform: " << platform << "\n\n";
 	Simulation().start(); //"simulation example"); 
 	return 0;

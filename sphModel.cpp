@@ -1,10 +1,6 @@
 #include "sphModel.hpp"
 
-
-// TODO: implement boundary conditions
-//		initialize velocities as random normal distribution
-//		Introduce gravity??
-
+// TODO: implement SPH interaction
 
 SPH::SPH(unsigned N)
 	:	_nParticles(N),
@@ -91,6 +87,10 @@ void SPH::timestep(float dt) {
 
 	applyBoundary();
 
+	// TODO: remove - sleeping only for debugging, simulates longer execution time
+	unsigned microseconds = 100000;
+	usleep(microseconds); 
+
 	_ready = true; // computation done, ready for rendering
 
 }
@@ -129,17 +129,18 @@ bool SPH::isReady() {
 // Overloaded output operator
 ostream& operator<<(ostream& os, const SPH& s) {
 
-	unsigned nOutput = 5; // s._nParticles;
+	unsigned nOutput = 3; // Only output first three particles
+	// unsigned nOutput = s._nParticles; // All particles
 
 	os << "\n\tPositions:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
-		printf("%1.4f %1.4f %1.4f | ", s._x1[i], s._x2[i], s._x3[i]);
+		printf("%3.4f %3.4f %3.4f | ", s._x1[i], s._x2[i], s._x3[i]);
 	}
 	
 	
 	os << "\n\tVelocities:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
-		printf("%1.4f %1.4f %1.4f | ", s._v1[i], s._v2[i], s._v3[i]);
+		printf("%3.4f %3.4f %3.4f | ", s._v3[i], s._v2[i], s._v3[i]);
 	}
 
 	os << "\n";

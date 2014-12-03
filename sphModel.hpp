@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <cmath>
 #include <random>
+#include <unistd.h>
 
 using std::ostream;
 
