@@ -73,6 +73,9 @@ class SPH {
 		// Gravity
 		float _g; 
 
+		// Damping factor for elastic bounding on walls
+		float _damping;
+
 		// Boolean flag that signalizes whether the model is computing or idle
 		bool _ready;
 		

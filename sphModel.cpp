@@ -9,7 +9,10 @@ SPH::SPH(unsigned N)
 		_x3(new float[_nParticles]),
 		_v1(new float[_nParticles]),
 		_v2(new float[_nParticles]),
-		_v3(new float[_nParticles])
+		_v3(new float[_nParticles]),
+		_g(-9.81),
+		_damping(.9),
+		_ready(true)
 {
 	std::cout << "\nInitializing Model...";
 	
@@ -18,14 +21,14 @@ SPH::SPH(unsigned N)
 	// std::mt19937 e2(rd());
 	std::mt19937 e2(42);
 	float mean = 0; // mean velocity
-	float stddev = 10; // standard deviation of velocity
+	float stddev = 50; // standard deviation of velocity
 	std::normal_distribution<> dist(mean,stddev);
 
 	// Initialize Particle Position
 	for(unsigned i=0; i<_nParticles; ++i) {
 		
 		// Position
-		_x1[i] = 100*float(i)/_nParticles;
+		_x1[i] = 0; // 100*float(i)/_nParticles;
 		_x2[i] = 0;
 		_x3[i] = 0;
 		
@@ -47,9 +50,8 @@ SPH::SPH(unsigned N)
 		_x2MinBox = 45;
 		_x2MaxBox = 55;
 
-		_g = 0; // -9.81; TODO: uncomment to introduce gravity
+		_g = 0; // TODO: comment to introduce gravity
 
-		_ready = true;
 
 	}
 
@@ -102,21 +104,25 @@ void SPH::applyBoundary() {
 	for(unsigned i=0; i<_nParticles; ++i) {
 
 		// Elastic reflection on wall
-		if(_x1[i] <= _x1MinWall) _v1[i] = +std::abs(_v1[i]);
-		if(_x1[i] >= _x1MaxWall) _v1[i] = -std::abs(_v1[i]);
-		if(_x2[i] <= _x2MinWall) _v2[i] = +std::abs(_v2[i]);
-		if(_x2[i] >= _x2MaxWall) _v2[i] = -std::abs(_v2[i]);
+		if(_x1[i] <= _x1MinWall) _v1[i] = +_damping*std::abs(_v1[i]);
+		if(_x1[i] >= _x1MaxWall) _v1[i] = -_damping*std::abs(_v1[i]);
+		if(_x2[i] <= _x2MinWall) _v2[i] = +_damping*std::abs(_v2[i]);
+		if(_x2[i] >= _x2MaxWall) _v2[i] = -_damping*std::abs(_v2[i]);
 
 
 		// Elastic reflection on box
 		float center1Box = .5*(_x1MinBox+_x1MaxBox);
 		float center2Box = .5*(_x2MinBox+_x2MaxBox);
 
-		if(_x1[i] >= _x1MinBox && _x1[i] < center1Box) _v1[i] = -std::abs(_v1[i]);
-		if(_x1[i] <= _x1MaxBox && _x1[i] > center1Box) _v1[i] = +std::abs(_v1[i]);
+		if(_x1[i] >= _x1MinBox && _x1[i] < center1Box && _x2[i] >= _x2MinBox && _x2[i] < center2Box) _v1[i] = -_damping*std::abs(_v1[i]);
+		if(_x1[i] >= _x1MinBox && _x1[i] < center1Box && _x2[i] <= _x2MaxBox && _x2[i] > center2Box) _v1[i] = -_damping*std::abs(_v1[i]);
+		if(_x1[i] <= _x1MaxBox && _x1[i] > center1Box && _x2[i] >= _x2MinBox && _x2[i] < center2Box) _v1[i] = +_damping*std::abs(_v1[i]);
+		if(_x1[i] <= _x1MaxBox && _x1[i] > center1Box && _x2[i] <= _x2MaxBox && _x2[i] > center2Box) _v1[i] = +_damping*std::abs(_v1[i]);
+	
+		/*
 		if(_x2[i] >= _x2MinBox && _x2[i] < center2Box) _v2[i] = -std::abs(_v2[i]);
 		if(_x2[i] <= _x2MaxBox && _x2[i] > center2Box) _v2[i] = +std::abs(_v2[i]);
-	
+*/	
 	}
 
 }

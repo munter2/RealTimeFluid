@@ -22,7 +22,7 @@
 	#include "Aluminum/ResourceHandler.hpp"
 	#include "Aluminum/Texture.hpp"
 	#include "Aluminum/Renderer.hpp"
-#elif defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN204
 	std::string platform = "WINDOWS";
 #else
 #error "unknown platform"
@@ -31,6 +31,7 @@
 
 
 #include "sphModel.hpp"
+#include "positionCube.hpp"
 
 
 
@@ -53,27 +54,18 @@ public:
 	Program program;
 
 	GLint posLoc = 0;
-	GLint colLoc = -1;
 	GLint normalLoc = 1;
-	MeshBuffer mb;
-  
-	mat4 model, view, proj;
+	GLint colLoc = 2;
+	
+	MeshBuffer mb[20];
+	
+	mat4 view, proj;
 	Behavior rotateBehavior;
 
-
-    vec4 l1_position = vec4(0.0,3.0, 4.0, 1.0);
-    vec4 l2_position = vec4(0.0,-1.0,-1.0,1.0);
+ 
 
 
-  vec3 ambient = vec3(0.1,0.1,0.5);
-  
-  vec3 l1_diffuse = vec3(0.0,.5,0.0);
-  vec3 l1_specular = vec3(1.0,1.0,1.0);
-  
-  vec3 l2_diffuse = vec3(0.0,0.0,1.0);
-  vec3 l2_specular = vec3(1.0,1.0,1.0);
-	
-  
+
 	SPH fluidsimulation = SPH(20); // Initialize Fluid simulation model with 20 particles
 		
 	
@@ -81,44 +73,27 @@ public:
 	
 
 
-	float dpsi = 0.1;
-
 	void onCreate() {
-	
-		// Display System Information
-		char* verGL = (char*)glGetString(GL_VERSION);
-		char* verGLSL = (char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
-		printf("GL %s GLSL %s\n", verGL, verGLSL);
 
-		
-		MeshData md;
-		// addCube(md, .4);
-		addSphere(md,1,4,4);
-		
-		// Colored Cubes
-		program.create();
 		rh.loadProgram(program, "resources/simulation", posLoc, normalLoc, -1, colLoc);
-		mb.init(md,posLoc,normalLoc,-1,colLoc);
 
-		// Rotation and Matrices
-		rotateBehavior = Behavior(now()).delay(1000).length(5000).range(vec3(3.14, 3.14, 3.14)).reversing(true).repeats(-1).linear();
-    
-		proj = glm::perspective(45.0, 1.0, 0.1, 100.0);
-		view = glm::lookAt(vec3(0.0,0.0,2), vec3(0,0,0), vec3(0,1,0) );
-		model = glm::mat4(1.0);
-		camera = Camera(glm::radians(60.0),1.,0.01,1000.0);
+		for(int i=0; i<20; ++i) {
+			MeshData md;
+			// addCube(md,4.f,vec3(0,0,0));
+			addSphere(md,4.f,10,10);
+			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
+		}
 
 		glEnable(GL_DEPTH_TEST);
-		glViewport(0,0,width,height);
+		glViewport(0, 0, width, height);
 
-		
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		// Initialize Fluid Simulation Model
-		///////////////////////////////////////////////////////////////////////////////////////////////
+		rotateBehavior = Behavior(now()).delay(1000).length(5000).range(vec3(3.14, 3.14, 3.14)).reversing(true).repeats(-1).linear();
+
+		camera = Camera(glm::radians(200.0),1.,0.01,1000.0);
+		camera.translateZ(-40);
+
+		// Output Simulation state
 		std::cout << "\nModel Parameters after Initialization:\n" << fluidsimulation;
-
-
-			///////////////////////////////////////////////////////////////////////////////////////////////
 
 	}
 
@@ -143,9 +118,9 @@ public:
 		// PROPAGATE MODEL
 		///////////////////////////////////////////////////////////
 
-		if(stepCounter < 50) {
+		if(stepCounter < 500) {
 
-			fluidsimulation.timestep(1); // Propagate fluidsimulation in time
+			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
 			std::cout << "\nTimestep " << stepCounter << fluidsimulation; // Output current status of Fluid particles
 
 			++stepCounter;
@@ -175,65 +150,48 @@ public:
 		///////////////////////////////////////////////////////////
 
 
- 
+
+		// Start displaying
+    
+		glViewport(0, 0, width, height);
+		glClearColor(0.1,0.1,0.1,1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+		
 		if (camera.isTransformed) {
 			camera.transform();
 		}
-
-		vec3 totals = rotateBehavior.tick(now()).totals();
-		
-		glViewport(0, 0, width, height);
-		glClearColor(0.1,0.1,0.1,1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	   
-		int nCubes = 18;
-		float dphi = 2.*glm::pi<float>()/nCubes;
-		float R = 5.;
-		
-		model = mat4(1.0);
-		model = glm::translate(model, vec3(0.,0.,-R));
-
-		model = glm::rotate(model, -totals.x, vec3(1.0f,0.0f,0.0f));
-		model = glm::rotate(model, -totals.y, vec3(0.0f,1.0f,0.0f));
-		model = glm::rotate(model, -totals.z, vec3(0.0f,0.0f,1.0f));
 	 
-		mat4 tmpview = camera.view;
-		
-		for(unsigned i=0; i<nCubes; ++i) {
+		vec3 totals = vec3(.0f,.0f,.0f); // rotateBehavior.tick(now()).totals(); // TODO: uncomment for rotation
 
-			tmpview = glm::rotate(tmpview,pi,vec3(0,1.,0));
-
+		// Draw Cubes
+		for(int i=0; i<20; ++i) {
 			program.bind(); {
+		/*
+		proj = glm::perspective(45.0, 1.0, 0.1, 100.0);
+		view = glm::lookAt(vec3(0.0,0.0,100), vec3(0,0,0), vec3(0,1,0) );
+	*/	
 
+				mat4 model = mat4(1.0);
+
+				float position[3];
+				fluidsimulation.getPosition(i,position);
+
+				model = glm::translate(model,vec3(position[0],position[1],0));
+
+				// For Rotation of Cubes
+				/*
+				model = glm::rotate(model, -totals.x, vec3(1.0f,0.0f,0.0f));
+				model = glm::rotate(model, -totals.y, vec3(0.0f,1.0f,0.0f));
+				model = glm::rotate(model, -totals.z, vec3(0.0f,0.0f,1.0f));
+				*/
+				
 				glUniformMatrix4fv(program.uniform("model"), 1, 0, ptr(model));
-				// glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
-				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(tmpview));
+				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
-
-				// Lights
-				glUniform4fv(program.uniform("l1_position"), 1, ptr(l1_position));
-				glUniform4fv(program.uniform("l2_position"), 1, ptr(l2_position));
-
-
-				// Lighting parameters
-			  glUniform3fv(program.uniform("l1_diffuse"), 1, ptr(vec3(0.0)));
-			  glUniform3fv(program.uniform("l1_specular"), 1, ptr(vec3(0.0)));
-			  
-			  glUniform3fv(program.uniform("l2_diffuse"), 1, ptr(vec3(0.0)));
-			  glUniform3fv(program.uniform("l2_specular"), 1, ptr(vec3(0.0)));
-			  
-			  /* draw light 1 */
-			  glUniform3fv(program.uniform("ambient"), 1, ptr(l1_diffuse));
-
-
-
-
-				mb.draw();
-
+				mb[i].draw();
 			} program.unbind();
 
-			
-		}
+		} 			  
 
 	}
 
@@ -282,22 +240,13 @@ public:
 		}
 	}
     
-  
-	void mouseMoved(int px, int py) {
-	// view = glm::rotate(view,1.f,vec3(0,1,0));
-      // printf("in Simulation: mouseMoved %d/%d\n", px, py);
-    }
-  
 };
 
 
 int main(){ 
-
-
 	std::cout << "\n\nRunning on Platform: " << platform << "\n\n";
-	Simulation().start(); //"simulation example"); 
+	Simulation().start(); 
 	return 0;
-
 }
 
 
