@@ -2,7 +2,6 @@
 
 
 // TODO: implement boundary conditions
-//		elastic boundary conditions: invert velocity near plane
 //		initialize velocities as random normal distribution
 //		Introduce gravity??
 
@@ -17,19 +16,44 @@ SPH::SPH(unsigned N)
 		_v3(new float[_nParticles])
 {
 	std::cout << "\nInitializing Model...";
+	
+	// Seeding random number generator and set parameters for normal distribution
+	// std::random_device rd; // Uncomment to make it even more random ;)
+	// std::mt19937 e2(rd());
+	std::mt19937 e2(42);
+	float mean = 0; // mean velocity
+	float stddev = 10; // standard deviation of velocity
+	std::normal_distribution<> dist(mean,stddev);
 
 	// Initialize Particle Position
 	for(unsigned i=0; i<_nParticles; ++i) {
 		
 		// Position
-		_x1[i] = float(i)/_nParticles;
+		_x1[i] = 100*float(i)/_nParticles;
 		_x2[i] = 0;
 		_x3[i] = 0;
 		
-		// Velocities
-		_v1[i] = 0;
-		_v2[i] = .2f;
+		// Velocities (sampled from random normal distribution)
+		_v1[i] = dist(e2);
+		_v2[i] = dist(e2);
 		_v3[i] = 0;
+
+		// _v1[i] = 0; // TODO: remove, v_x = 0 only for debugging
+		// _v2[i] = 40.f; // TODO: remove, v_y = 40 only for debugging
+
+		_x1MinWall = 0;
+		_x1MaxWall = 100;
+		_x2MinWall = 0;
+		_x2MaxWall = 100;
+
+		_x1MinBox = 40;
+		_x1MaxBox = 60;
+		_x2MinBox = 45;
+		_x2MaxBox = 55;
+
+		_g = 0; // -9.81; TODO: uncomment to introduce gravity
+
+		_ready = true;
 
 	}
 
@@ -47,13 +71,62 @@ SPH::~SPH() {
 }
 
 void SPH::timestep(float dt) {
+
+	_ready = false; // start computing
+
+	std::cout << "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TIMESTEP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
+
 	for(unsigned i=0; i<_nParticles; ++i) {
+		
+		// Propagation of particles by velocity
 		_x1[i] += dt*_v1[i];
 		_x2[i] += dt*_v2[i];
-		_x3[i] += dt*_v3[i];
+		// _x3[i] += dt*_v3[i]; // not needed in 2d case
+
+		// Apply gravitational force to velocities
+		_v2[i] += _g*dt;
+
 	}
+
+
+	applyBoundary();
+
+	_ready = true; // computation done, ready for rendering
+
 }
 
+
+void SPH::applyBoundary() {
+
+	std::cout << "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> APPLY BOUNDARY >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
+	for(unsigned i=0; i<_nParticles; ++i) {
+
+		// Elastic reflection on wall
+		if(_x1[i] <= _x1MinWall) _v1[i] = +std::abs(_v1[i]);
+		if(_x1[i] >= _x1MaxWall) _v1[i] = -std::abs(_v1[i]);
+		if(_x2[i] <= _x2MinWall) _v2[i] = +std::abs(_v2[i]);
+		if(_x2[i] >= _x2MaxWall) _v2[i] = -std::abs(_v2[i]);
+
+
+		// Elastic reflection on box
+		float center1Box = .5*(_x1MinBox+_x1MaxBox);
+		float center2Box = .5*(_x2MinBox+_x2MaxBox);
+
+		if(_x1[i] >= _x1MinBox && _x1[i] < center1Box) _v1[i] = -std::abs(_v1[i]);
+		if(_x1[i] <= _x1MaxBox && _x1[i] > center1Box) _v1[i] = +std::abs(_v1[i]);
+		if(_x2[i] >= _x2MinBox && _x2[i] < center2Box) _v2[i] = -std::abs(_v2[i]);
+		if(_x2[i] <= _x2MaxBox && _x2[i] > center2Box) _v2[i] = +std::abs(_v2[i]);
+	
+	}
+
+}
+
+bool SPH::isReady() {
+	return _ready;
+}
+
+
+// Overloaded output operator
 ostream& operator<<(ostream& os, const SPH& s) {
 
 	unsigned nOutput = 5; // s._nParticles;
