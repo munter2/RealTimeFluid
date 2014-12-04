@@ -49,7 +49,7 @@ class Simulation : public Renderer {
 
 public:
 
-	static const unsigned N = 800;
+	static const unsigned N = 2000;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
