@@ -1,0 +1,71 @@
+\documentclass[fontsize=11pt]{scrartcl}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}				% special symbols
+\usepackage{fancyhdr}					% headers and footers
+\usepackage{verbatim}					% for comments
+\usepackage{graphicx}					% images
+\usepackage[font=footnotesize]{caption}	% smaller image label
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor} 					% highlighting
+\usepackage{hyperref}				    % for links (text or internet)
+\usepackage{amsmath}	    			% maths
+\usepackage{relsize}
+
+\usepackage[hyperref=true,style=authoryear,backend=biber]{biblatex}
+\usepackage{filecontents}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+
+%\linespread{2}
+
+% \pagestyle{headings}
+
+\addbibresource{bibliography.bib}
+
+
+\title{Real Time Fluid Simulation \\ \smaller using Smoothed-Particle Hydrodynamics and OpenGL}
+
+\subtitle{Computer Graphics CS 488}
+
+\author{Michael Berg \\ Matthias Untergassmair}
+
+
+\pagestyle{fancy}
+\rhead{\thepage}
+
+
+
+
+\begin{document}
+
+
+\maketitle
+
+\abstract{
+	This paper talks about the implementation of a real time Fluid simulation displayed in OpenGL \dots blaaaaaaaaaaaaa
+}
+
+\clearpage
+
+\section{Introduction}
+%
+Hello World! This is how you can cite a paper \cite{realtimerendering} Let's go to a new line \\
+Let's go to a new paragraph \par\medskip
+Let's write a formula
+\begin{align*}
+	\sum_{i=0}^N \int_{-\infty}^\infty e^{-\frac{1}{2}x^2} \; dx
+\end{align*}
+%
+It's not that hard ;)
+
+\section{Mathematical Background}
+
+\section*{Appendix: Code}
+
+
+
+\clearpage
+\nocite{*}
+\printbibliography
+
+
+\end{document}

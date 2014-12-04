@@ -31,3 +31,13 @@
 # Additional files to exclude
 Makefile
 simulation
+
+
+# Ignore LaTeX compilation files
+*.aux 
+*.bbl 
+*.bcf
+*.blg
+*.log
+*.out
+*.xml
