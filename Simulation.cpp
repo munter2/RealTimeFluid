@@ -62,6 +62,7 @@ public:
 	mat4 view, proj;
 	Behavior rotateBehavior;
 
+	bool gravityOn;
  
 
 
@@ -79,7 +80,7 @@ public:
 
 		for(int i=0; i<20; ++i) {
 			MeshData md;
-			// addCube(md,4.f,vec3(0,0,0));
+			// addCube(md,10.f,vec3(0,0,0));
 			addSphere(md,4.f,10,10);
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
@@ -94,6 +95,8 @@ public:
 
 		// Output Simulation state
 		std::cout << "\nModel Parameters after Initialization:\n" << fluidsimulation;
+
+		gravityOn = false;
 
 	}
 
@@ -119,11 +122,9 @@ public:
 		///////////////////////////////////////////////////////////
 
 		if(stepCounter < 500) {
-
-			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
-			std::cout << "\nTimestep " << stepCounter << fluidsimulation; // Output current status of Fluid particles
-
 			++stepCounter;
+			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
+			std::cout << fluidsimulation; // Output current status of Fluid particles
 		}
 	
 		// Getting position data for rendering
@@ -188,6 +189,9 @@ public:
 				glUniformMatrix4fv(program.uniform("model"), 1, 0, ptr(model));
 				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
+
+				glUniform3f(program.uniform("velocity"), .5,.5,.5);
+
 				mb[i].draw();
 			} program.unbind();
 
@@ -204,14 +208,20 @@ public:
 
 		// Switch Cross Compatible with Linux/MacOS
 		
+		float dxBox = 1;
+		
 		if(key == GLUT_KEY_UP || false) {
-			camera.rotateX(glm::radians(-2.));
+			// camera.rotateX(glm::radians(-2.));
+			fluidsimulation.moveBoxY(-dxBox);
 		} else if(key == GLUT_KEY_DOWN || false) {
-			camera.rotateX(glm::radians(2.));
+			// camera.rotateX(glm::radians(2.));
+			fluidsimulation.moveBoxY(+dxBox);
 		} else if(key == GLUT_KEY_RIGHT || false) {
-			camera.rotateY(glm::radians(2.));
+			// camera.rotateY(glm::radians(2.));
+			fluidsimulation.moveBoxX(+dxBox);
 		} else if(key == GLUT_KEY_LEFT || false) {
-			camera.rotateY(glm::radians(-2.));
+			fluidsimulation.moveBoxX(-dxBox);
+			// camera.rotateY(glm::radians(-2.));
 		}
 
 	}
@@ -237,6 +247,14 @@ public:
 			camera.translateY(-0.5);
 		} else if(key == 'j' || false) {
 			camera.translateY(0.5);
+		} else if(key == 'g' || false) {
+			if(gravityOn) {
+				fluidsimulation.setGravity(0);
+				gravityOn = false;
+			} else {
+				fluidsimulation.setGravity(-9.81);
+				gravityOn = true;
+			}
 		}
 	}
     

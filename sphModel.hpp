@@ -46,6 +46,19 @@ class SPH {
 			v[2] = _v3[index];
 		}
 
+		// Return Kinetic Energy
+		float getEkin() const;
+
+		// Return Potential Energy
+		float getEpot() const;
+
+		// Setting Gravity
+		void setGravity(float);
+
+		// Functions for changing Box position
+		void moveBoxX(float);
+		void moveBoxY(float);
+
 	private:
 
 		unsigned _nParticles;
@@ -57,6 +70,9 @@ class SPH {
 		float* _v1;
 		float* _v2;
 		float* _v3;
+
+		// Array of particle masses
+		float* _m;
 
 		// Wall Coordinates
 		float _x1MinWall;
@@ -78,6 +94,10 @@ class SPH {
 
 		// Boolean flag that signalizes whether the model is computing or idle
 		bool _ready;
+
+		// Total time
+		float _T;
+		unsigned _tStep;
 		
 };
 
