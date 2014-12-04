@@ -30,10 +30,17 @@ class SPH {
 		void applyBoundary();
 
 		// Return status of model - Ready for rendering?
-		bool isReady();
+		bool isReady() const;
+		
+		// Get Radius of Particle i
+		unsigned getTotalParticles() const;
 
 		// Write position to the 3-array x
 		inline void getPosition(unsigned index, float* x) {
+			if(index >= _nTotal) {
+				std::cout << "ERROR: Invalid index";
+				return;
+			}
 			x[0] = _x1[index];
 			x[1] = _x2[index];
 			x[2] = _x3[index];
@@ -41,6 +48,10 @@ class SPH {
 		
 		// Write velocity to the 3-array v
 		inline void getVelocity(unsigned index, float* v) {
+			if(index >= _nTotal) {
+				std::cout << "ERROR: Invalid index";
+				return;
+			}
 			v[0] = _v1[index];
 			v[1] = _v2[index];
 			v[2] = _v3[index];
@@ -51,6 +62,9 @@ class SPH {
 
 		// Return Potential Energy
 		float getEpot() const;
+		
+		// Get Radius of Particle i
+		float getRadius(unsigned) const;
 
 		// Setting Gravity
 		void setGravity(float);
@@ -61,7 +75,10 @@ class SPH {
 
 	private:
 
-		unsigned _nParticles;
+		unsigned _nParticles; // Number of fluid particles
+		unsigned _nGhostWall; // Number of ghost particles in the walls
+		unsigned _nGhostObject; // Number of ghost particles in the object
+		unsigned _nTotal; // Total number of particles
 
 		// Array of particle coordinates & velocities
 		float* _x1;
@@ -73,6 +90,9 @@ class SPH {
 
 		// Array of particle masses
 		float* _m;
+		
+		// Array of particle radii
+		float* _r;
 
 		// Wall Coordinates
 		float _x1MinWall;
@@ -86,6 +106,11 @@ class SPH {
 		float _x2MinBox;
 		float _x2MaxBox;
 
+		// Velocity component introduced by Box movement
+		float _v1Box;
+		float _v2Box;
+
+
 		// Gravity
 		float _g; 
 
@@ -98,6 +123,12 @@ class SPH {
 		// Total time
 		float _T;
 		unsigned _tStep;
+
+		// Size of current timestep
+		float _dt;
+
+		// Was the Box moved?
+		bool _boxMoved;
 		
 };
 

@@ -1,5 +1,6 @@
 #version 150 
 uniform mat4 proj, view, model;
+uniform vec3 velocity;
 
 in vec4 vertexPosition, vertexNormal, vertexColor;
 
@@ -9,7 +10,7 @@ void main() {
   
   vec4 position = view * model * vertexPosition;
 
-  color = vertexColor.xyz;
+  color = velocity; // vertexColor.xyz;
 
   gl_Position = proj * position; 
 

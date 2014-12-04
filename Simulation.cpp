@@ -22,7 +22,7 @@
 	#include "Aluminum/ResourceHandler.hpp"
 	#include "Aluminum/Texture.hpp"
 	#include "Aluminum/Renderer.hpp"
-#elif defined _WIN32 || defined _WIN204
+#elif defined _WIN32 || defined _WIN64
 	std::string platform = "WINDOWS";
 #else
 #error "unknown platform"
@@ -31,7 +31,7 @@
 
 
 #include "sphModel.hpp"
-#include "positionCube.hpp"
+#include "extendedShapes.hpp"
 
 
 
@@ -48,6 +48,9 @@ using namespace aluminum;
 class Simulation : public Renderer {
 
 public:
+
+	static const unsigned N = 800;
+	unsigned M = 0;
 		
 	ResourceHandler rh; 
 	Camera camera;
@@ -57,7 +60,7 @@ public:
 	GLint normalLoc = 1;
 	GLint colLoc = 2;
 	
-	MeshBuffer mb[20];
+	MeshBuffer* mb;
 	
 	mat4 view, proj;
 	Behavior rotateBehavior;
@@ -67,7 +70,7 @@ public:
 
 
 
-	SPH fluidsimulation = SPH(20); // Initialize Fluid simulation model with 20 particles
+	SPH fluidsimulation = SPH(N); // Initialize Fluid simulation model with N particles
 		
 	
 	unsigned stepCounter = 0; // TODO: remove - step counter that keeps track of how many timesteps have been done - model stops after certain number of steps
@@ -76,12 +79,19 @@ public:
 
 	void onCreate() {
 
+		// Output Simulation state
+		std::cout << "\nModel Parameters after Initialization:\n" << fluidsimulation;
+		
 		rh.loadProgram(program, "resources/simulation", posLoc, normalLoc, -1, colLoc);
 
-		for(int i=0; i<20; ++i) {
+		M = fluidsimulation.getTotalParticles(); // Render all particles
+		mb = new MeshBuffer[M];
+
+		for(int i=0; i<M; ++i) {
 			MeshData md;
-			// addCube(md,10.f,vec3(0,0,0));
-			addSphere(md,4.f,10,10);
+			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
+			// addRect(md,10.f,30.f,50.f,vec3(0,0,0));
+			addSphere(md,fluidsimulation.getRadius(i),8,8);
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -90,11 +100,9 @@ public:
 
 		rotateBehavior = Behavior(now()).delay(1000).length(5000).range(vec3(3.14, 3.14, 3.14)).reversing(true).repeats(-1).linear();
 
-		camera = Camera(glm::radians(200.0),1.,0.01,1000.0);
-		camera.translateZ(-40);
+		camera = Camera(glm::radians(60.0),1.,0.01,1000.0);
+		camera.translateZ(-400);
 
-		// Output Simulation state
-		std::cout << "\nModel Parameters after Initialization:\n" << fluidsimulation;
 
 		gravityOn = false;
 
@@ -121,7 +129,7 @@ public:
 		// PROPAGATE MODEL
 		///////////////////////////////////////////////////////////
 
-		if(stepCounter < 500) {
+		if(stepCounter < 50000) {
 			++stepCounter;
 			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
 			std::cout << fluidsimulation; // Output current status of Fluid particles
@@ -165,7 +173,7 @@ public:
 		vec3 totals = vec3(.0f,.0f,.0f); // rotateBehavior.tick(now()).totals(); // TODO: uncomment for rotation
 
 		// Draw Cubes
-		for(int i=0; i<20; ++i) {
+		for(int i=0; i<M; ++i) {
 			program.bind(); {
 		/*
 		proj = glm::perspective(45.0, 1.0, 0.1, 100.0);
@@ -175,7 +183,9 @@ public:
 				mat4 model = mat4(1.0);
 
 				float position[3];
+				float velocity[3];
 				fluidsimulation.getPosition(i,position);
+				fluidsimulation.getVelocity(i,velocity);
 
 				model = glm::translate(model,vec3(position[0],position[1],0));
 
@@ -190,7 +200,7 @@ public:
 				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
 
-				glUniform3f(program.uniform("velocity"), .5,.5,.5);
+				glUniform3f(program.uniform("velocity"), std::abs(velocity[0])/100,velocity[1]/100,0);
 
 				mb[i].draw();
 			} program.unbind();
@@ -212,10 +222,10 @@ public:
 		
 		if(key == GLUT_KEY_UP || false) {
 			// camera.rotateX(glm::radians(-2.));
-			fluidsimulation.moveBoxY(-dxBox);
+			fluidsimulation.moveBoxY(dxBox);
 		} else if(key == GLUT_KEY_DOWN || false) {
 			// camera.rotateX(glm::radians(2.));
-			fluidsimulation.moveBoxY(+dxBox);
+			fluidsimulation.moveBoxY(-dxBox);
 		} else if(key == GLUT_KEY_RIGHT || false) {
 			// camera.rotateY(glm::radians(2.));
 			fluidsimulation.moveBoxX(+dxBox);
@@ -229,30 +239,32 @@ public:
 
 	void keyboard(unsigned char key, int x, int y) {
 
+		float dxCamera = 5;
+
 		if(key == ' ' || false) {
 			camera.resetVectors();
 		} else if(key == 'a' || false) {
-			camera.rotateZ(glm::radians(2.));
+			camera.rotateY(glm::radians(-2.));
 		} else if(key == 's' || false) {
-			camera.rotateZ(glm::radians(-2.));
+			camera.rotateY(glm::radians(+2.));
 		} else if(key == 'n' || false) {
-			camera.translateZ(-0.5);
+			camera.translateZ(-dxCamera);
 		} else if(key == 'u' || false) {
-			camera.translateZ(0.5);
+			camera.translateZ(+dxCamera);
 		} else if(key == 'h' || false) {
-			camera.translateX(0.5);
+			camera.translateX(+dxCamera);
 		} else if(key == 'l' || false) {
-			camera.translateX(-0.5);
+			camera.translateX(-dxCamera);
 		} else if(key == 'k' || false) {
-			camera.translateY(-0.5);
+			camera.translateY(-dxCamera);
 		} else if(key == 'j' || false) {
-			camera.translateY(0.5);
+			camera.translateY(+dxCamera);
 		} else if(key == 'g' || false) {
 			if(gravityOn) {
 				fluidsimulation.setGravity(0);
 				gravityOn = false;
 			} else {
-				fluidsimulation.setGravity(-9.81);
+				fluidsimulation.setGravity(-20);
 				gravityOn = true;
 			}
 		}
