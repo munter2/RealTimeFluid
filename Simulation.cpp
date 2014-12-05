@@ -90,8 +90,8 @@ public:
 		for(int i=0; i<M; ++i) {
 			MeshData md;
 			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
-			// addRect(md,10.f,30.f,50.f,vec3(0,0,0));
-			addSphere(md,fluidsimulation.getRadius(i),8,8);
+			addRect(md,4.f,4.f,100.f,vec3(0,0,0));
+			// addSphere(md,fluidsimulation.getRadius(i),8,8);
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -200,7 +200,7 @@ public:
 				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
 
-				glUniform3f(program.uniform("velocity"), std::abs(velocity[0])/100,velocity[1]/100,0);
+				glUniform3f(program.uniform("velocity"), std::abs(velocity[0])/100,velocity[1]/100,.25);
 
 				mb[i].draw();
 			} program.unbind();
