@@ -14,6 +14,9 @@ SPH::SPH(unsigned N)
 		_v1(new float[_nTotal]),
 		_v2(new float[_nTotal]),
 		_v3(new float[_nTotal]),
+		_a1(new float[_nTotal]),
+		_a2(new float[_nTotal]),
+		_a3(new float[_nTotal]),
 		_m(new float[_nTotal]),
 		_r(new float[_nTotal]),
 		_x1MinWall(-100),
@@ -26,7 +29,6 @@ SPH::SPH(unsigned N)
 		_x2MaxBox(+100),
 		_g(0),
 		_damping(.8),
-		_ready(true),
 		_T(0.0),
 		_tStep(0),
 		_dt(0),
@@ -46,20 +48,24 @@ SPH::SPH(unsigned N)
 	for(unsigned i=0; i<_nParticles; ++i) {
 		
 		// Position
-		_x1[i] = (i%2 ? -50 : 50); // 10*float(i)/_nParticles;
+		_x1[i] = (i%2 ? -50 : 50) + .1*dist(e2); // 10*float(i)/_nParticles;
 		_x2[i] = 0;
 		_x3[i] = 0;
 		
-		// Velocities (sampled from random normal distribution)
-		_v1[i] = dist(e2);
-		_v2[i] = dist(e2);
-		_v3[i] = 0;
-
 		// Masses (assume all particles have the same mass)
 		_m[i] = 1e-6 * (1+i%3);
 
 		// Radius / Support of particles
 		_r[i] = 1+i%3;
+
+		// Compute Forces acting on particles based on positions
+		updateForces();
+		
+
+		// Velocities (sampled from random normal distribution)
+		_v1[i] = 0; // 0.1*dist(e2);
+		_v2[i] = 0; // dist(e2);
+		_v3[i] = 0;
 
 		// _v1[i] = 0; // TODO: remove, v_x = 0 only for debugging
 		// _v2[i] = 40.f; // TODO: remove, v_y = 40 only for debugging
@@ -99,7 +105,7 @@ SPH::SPH(unsigned N)
 		
 		_x3[i] = 0;
 		
-		// Velocities (sampled from random normal distribution)
+		// Velocities = 0 in boundary
 		_v1[i] = 0;
 		_v2[i] = 0;
 		_v3[i] = 0;
@@ -148,7 +154,7 @@ SPH::SPH(unsigned N)
 		}
 		
 		
-		// Velocities (sampled from random normal distribution)
+		// Velocities = 0 in Object
 		_v1[i] = 0;
 		_v2[i] = 0;
 		_v3[i] = 0;
@@ -167,6 +173,9 @@ SPH::~SPH() {
 	// Free memory
 	if(_r) { delete[] _r; }
 	if(_m) { delete[] _m; }
+	if(_a3) { delete[] _a3; }
+	if(_a2) { delete[] _a2; }
+	if(_a1) { delete[] _a1; }
 	if(_v3) { delete[] _v3; }
 	if(_v2) { delete[] _v2; }
 	if(_v1) { delete[] _v1; }
@@ -178,32 +187,81 @@ SPH::~SPH() {
 
 void SPH::timestep(float dt) {
 
-	_ready = false; // start computing
-
+	// Update Time counters
 	_dt = dt;
 	_T += _dt;
 	++_tStep;
 
+	// Update Forces
+	updateForces();
+
 	for(unsigned i=0; i<_nParticles; ++i) {
-		
-		// Propagation of particles by velocity
+
+		// Update Velocities
+		_v1[i] += _dt*_a1[i];
+		_v2[i] += _dt*_a2[i];
+		_v3[i] += _dt*_a3[i];
+
+		// Update Positions
 		_x1[i] += _dt*_v1[i];
 		_x2[i] += _dt*_v2[i];
-		// _x3[i] += _dt*_v3[i]; // not needed in 2d case
-
-		// Apply gravitational force to velocities
-		_v2[i] += _g*_dt;
+		_x3[i] += _dt*_v3[i];
 
 	}
 
-	applyBoundary();
+	// applyBoundary();
 
 	// TODO: remove - sleeping only for debugging, simulates longer execution time
-	unsigned microseconds = 50000;
+	unsigned microseconds = 20000;
 	usleep(microseconds); 
 
-	_ready = true; // computation done, ready for rendering
+}
 
+void SPH::updateForces() {
+
+	float d1, d2, d3; // Particle Distance in each space direction
+	float R; // Particle Distance in 3D space
+	float theta, phi; // Angles for orientation in 3D space
+	float F; // Force between two particles
+
+	for(unsigned i=0; i<_nParticles; ++i) {
+		
+		_a1[i] = 0;
+		_a2[i] = 0;
+		_a3[i] = 0;
+
+		for(unsigned a=0; a<_nParticles /*_nTotal*/; ++a) {
+
+			if(a == i) continue; // Particles don't interact with themselves
+
+			d1 = _x1[i] - _x1[a];
+			d2 = _x2[i] - _x2[a];
+			d3 = _x3[i] - _x3[a];
+
+			R = sqrt(d1*d1+d2*d2+d3*d3);
+			phi = atan2(d1,d3);
+			theta = (R != 0 ? acos(d2/R) : M_PI/2);
+
+			F = (R!=0 ? 1/R : 0); // Only Temporary force computation: Hooke's law
+
+			_a1[i] += F*sin(theta)*cos(phi);
+			_a2[i] += 0; // F*sin(theta)*sin(phi);
+			_a3[i] += 0; // F*cos(theta);
+			
+			// No Interaction
+			/*
+			_a1[i] = 0;
+			_a2[i] = 0;
+			_a3[i] = 0;
+			*/
+
+		}
+		_a2[i] += _g; // add gravity
+
+	}
+	std::cout << "Acceleration 1: " << _a1[0];
+	std::cout << "Acceleration 10: " << _a1[9];
+	std::cout << "Acceleration 100: " << _a1[99];
 }
 
 
@@ -312,10 +370,6 @@ void SPH::setGravity(float g) {
 	_g = g;
 }
 
-bool SPH::isReady() const {
-	return _ready;
-}
-
 unsigned SPH::getTotalParticles() const {
 	return _nTotal;
 }
@@ -331,19 +385,24 @@ ostream& operator<<(ostream& os, const SPH& s) {
 	os << "\nPotential Energy: \t" << s.getEpot();
 	os << "\nBox:\t[ " << s._x1MinBox << " , " << s._x1MaxBox << " ] x [ " << s._x2MinBox << " , " << s._x2MaxBox << " ]";
 	
-	unsigned nOutput = 1; // Only output first particle
+	unsigned nOutput = 2; // Only output first particle
 	// unsigned nOutput = s._nParticles; // All particles
 
-	os << "\nPositions:\t| ";
+	os << "\nPosition:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
 		printf("%3.4f %3.4f %3.4f | ", s._x1[i], s._x2[i], s._x3[i]);
 	}
 	
-	
-	os << "\nVelocities:\t| ";
+	os << "\nVelocity:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
 		printf("%3.4f %3.4f %3.4f | ", s._v1[i], s._v2[i], s._v3[i]);
 	}
+
+	os << "\nAcceleration:\t| ";
+	for(unsigned i=0; i<nOutput; ++i) {
+		printf("%3.4f %3.4f %3.4f | ", s._a1[i], s._a2[i], s._a3[i]);
+	}
+
 
 	os << "\n==========================================================";
 	os << "\n";

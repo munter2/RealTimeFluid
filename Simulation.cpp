@@ -49,7 +49,7 @@ class Simulation : public Renderer {
 
 public:
 
-	static const unsigned N = 2000;
+	static const unsigned N = 32;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
@@ -90,8 +90,8 @@ public:
 		for(int i=0; i<M; ++i) {
 			MeshData md;
 			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
-			addRect(md,4.f,4.f,100.f,vec3(0,0,0));
-			// addSphere(md,fluidsimulation.getRadius(i),8,8);
+			// addRect(md,4.f,4.f,100.f,vec3(0,0,0));
+			addSphere(md,fluidsimulation.getRadius(i),8,8);
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -129,7 +129,7 @@ public:
 		// PROPAGATE MODEL
 		///////////////////////////////////////////////////////////
 
-		if(stepCounter < 50000) {
+		if(stepCounter < 5000) {
 			++stepCounter;
 			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
 			std::cout << fluidsimulation; // Output current status of Fluid particles

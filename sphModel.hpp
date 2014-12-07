@@ -1,6 +1,7 @@
 #ifndef SPH_HPP
 #define SPH_HPP
 
+#define _USE_MATH_DEFINES // make M_PI available
 
 #include <iostream>
 #include <stdio.h>
@@ -19,9 +20,12 @@ class SPH {
 		
 		// Destructor
 		~SPH(); 
-
+		
 		// Time Propagation of model
 		void timestep(float);
+		
+		// Update forces on particles based on SPH
+		void updateForces();
 
 		// Overloading Output Operator
 		friend ostream& operator<<(ostream&, const SPH&);
@@ -29,9 +33,6 @@ class SPH {
 		// Applying elastic boundary conditions
 		void applyBoundary();
 
-		// Return status of model - Ready for rendering?
-		bool isReady() const;
-		
 		// Get Radius of Particle i
 		unsigned getTotalParticles() const;
 
@@ -80,13 +81,16 @@ class SPH {
 		unsigned _nGhostObject; // Number of ghost particles in the object
 		unsigned _nTotal; // Total number of particles
 
-		// Array of particle coordinates & velocities
+		// Array of particle coordinates & velocities & accelerations
 		float* _x1;
 		float* _x2;
 		float* _x3;
 		float* _v1;
 		float* _v2;
 		float* _v3;
+		float* _a1;
+		float* _a2;
+		float* _a3;
 
 		// Array of particle masses
 		float* _m;
@@ -116,9 +120,6 @@ class SPH {
 
 		// Damping factor for elastic bounding on walls
 		float _damping;
-
-		// Boolean flag that signalizes whether the model is computing or idle
-		bool _ready;
 
 		// Total time
 		float _T;

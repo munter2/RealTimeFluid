@@ -14,6 +14,7 @@
 \usepackage{filecontents}
 \usepackage{setspace}
 \usepackage{fancyhdr}
+\usepackage[ruled,vlined]{algorithm2e}
 
 %\linespread{2}
 
@@ -58,6 +59,29 @@ Let's write a formula
 It's not that hard ;)
 
 \section{Mathematical Background}
+%
+\begin{align}
+	a_i^n = \frac{F_i^n}{m_i} = \dots
+	\label{math:acceleration}
+\end{align}
+
+\section{The Algorithm}
+%
+In the following, we denote the position for the particle $i$ at time $t$ as $x_i^t$, its velocity as $v_i^t$ and its acceleration as $a_i^t$.
+We omit the vector notation ($\boldsymbol{x},\boldsymbol{v},\boldsymbol{a}$) for these quantities, since the following equations are valid for the vectors as well as for each component individually.
+\par\medskip
+%
+As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet} time stepping scheme as follows:
+%
+\begin{algorithm}
+	\caption{Single Timestep with Velocity Verlet Algorithm}
+	\KwData{$x_i^t$, $v_i^{t - \frac{\Delta t}{2}}$, $a_i^t$, $\Delta t$}
+	\KwResult{$x_i^{t + \Delta t}$, $v_i^{t + \frac{\Delta t}{2}}$, $a_i^{t + \Delta t}$}	
+	$v_i^{t+\frac{\Delta t}{2}} = v_i^{t - \frac{\Delta t}{2}} + \Delta t a_i^t$ \;
+	$x_i^{t+\Delta t} = x_i^t + \Delta t v_i^{t+\frac{\Delta t}{2}}$ \;	
+	$a_i^{t + \Delta t} = a_i^{t + \Delta t} (x_i^{t + \Delta t}, m_i)$ from equation \ref{math:acceleration} \;
+\end{algorithm}
+
 
 \section*{Appendix: Code}
 

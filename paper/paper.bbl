@@ -48,6 +48,25 @@
       \field{year}{2008}
       \field{pages}{1045}
     \endentry
+    \entry{generalizedwallboundary}{article}{}
+      \name{labelname}{1}{}{%
+        {{uniquename=0,hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+      }
+      \name{author}{1}{}{%
+        {{uniquename=0,hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+      }
+      \strng{namehash}{7e99eed2f3e83051b1bff73aa01cd827}
+      \strng{fullhash}{7e99eed2f3e83051b1bff73aa01cd827}
+      \field{sortinit}{S}
+      \field{sortinithash}{7545742a552e635d1d9d78916095bd90}
+      \field{labelyear}{2012}
+      \field{datelabelsource}{}
+      \field{labeltitle}{A generalized wall boundary condition for smoothed particle hydrodynamics}
+      \field{journaltitle}{Journal of Computational Physics}
+      \field{number}{231}
+      \field{title}{A generalized wall boundary condition for smoothed particle hydrodynamics}
+      \field{year}{2012}
+    \endentry
   \endsortlist
   \sortlist{nyt}{nyt}
     \entry{realtimerendering}{book}{}
@@ -78,6 +97,25 @@
       \field{title}{Real-Time Rendering 3rd Edition}
       \field{year}{2008}
       \field{pages}{1045}
+    \endentry
+    \entry{generalizedwallboundary}{article}{}
+      \name{labelname}{1}{}{%
+        {{uniquename=0,hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+      }
+      \name{author}{1}{}{%
+        {{uniquename=0,hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+      }
+      \strng{namehash}{7e99eed2f3e83051b1bff73aa01cd827}
+      \strng{fullhash}{7e99eed2f3e83051b1bff73aa01cd827}
+      \field{sortinit}{S}
+      \field{sortinithash}{7545742a552e635d1d9d78916095bd90}
+      \field{labelyear}{2012}
+      \field{datelabelsource}{}
+      \field{labeltitle}{A generalized wall boundary condition for smoothed particle hydrodynamics}
+      \field{journaltitle}{Journal of Computational Physics}
+      \field{number}{231}
+      \field{title}{A generalized wall boundary condition for smoothed particle hydrodynamics}
+      \field{year}{2012}
     \endentry
   \endsortlist
 \endrefsection
