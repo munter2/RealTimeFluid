@@ -167,7 +167,8 @@ public:
 		// Start displaying
     
 		glViewport(0, 0, width, height);
-		glClearColor(0.1,0.1,0.1,1.0);
+		// glClearColor(0.1,0.1,0.1,1.0);
+		glClearColor(1.0,1.0,1.0,1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 		
 		if (camera.isTransformed) {
