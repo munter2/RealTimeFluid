@@ -14,6 +14,8 @@ using std::ostream;
 class SPH {
 
 	public:
+
+		static const unsigned _ghostDepth = 3;
 		
 		// Constructor
 		SPH(unsigned); 
@@ -42,9 +44,10 @@ class SPH {
 				std::cout << "ERROR: Invalid index";
 				return;
 			}
-			x[0] = _x1[index];
-			x[1] = _x2[index];
-			x[2] = _x3[index];
+			// Take into account switching of axes for OpenGL
+			x[0] = _x2[index];
+			x[1] = _x3[index];
+			x[2] = _x1[index];
 		}
 		
 		// Write velocity to the 3-array v
@@ -53,9 +56,10 @@ class SPH {
 				std::cout << "ERROR: Invalid index";
 				return;
 			}
-			v[0] = _v1[index];
-			v[1] = _v2[index];
-			v[2] = _v3[index];
+			// Take into account switching of axes for OpenGL
+			v[0] = _v2[index];
+			v[1] = _v3[index];
+			v[2] = _v1[index];
 		}
 
 		// Return Kinetic Energy
@@ -71,8 +75,8 @@ class SPH {
 		void setGravity(float);
 
 		// Functions for changing Box position
-		void moveBoxX(float);
-		void moveBoxY(float);
+		// void moveBoxX(float);
+		// void moveBoxY(float);
 
 	private:
 
@@ -99,20 +103,20 @@ class SPH {
 		float* _r;
 
 		// Wall Coordinates
-		float _x1MinWall;
-		float _x1MaxWall;
 		float _x2MinWall;
 		float _x2MaxWall;
+		float _x3MinWall;
+		float _x3MaxWall;
 
 		// Box Coordinates
-		float _x1MinBox;
-		float _x1MaxBox;
 		float _x2MinBox;
 		float _x2MaxBox;
+		float _x3MinBox;
+		float _x3MaxBox;
 
 		// Velocity component introduced by Box movement
-		float _v1Box;
 		float _v2Box;
+		float _v3Box;
 
 
 		// Gravity

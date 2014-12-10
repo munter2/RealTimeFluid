@@ -16,6 +16,28 @@
 \usepackage{fancyhdr}
 \usepackage[ruled,vlined]{algorithm2e}
 
+\usepackage{listings}
+
+\lstset{language=C++,
+    basicstyle=\footnotesize\ttfamily,
+    keywordstyle=\bfseries\color{blue},%
+    showstringspaces=false,
+    breaklines=true,%
+    morekeywords={include, printf},
+	backgroundcolor=\color{lightgray},
+    identifierstyle=\color{black},%
+    stringstyle=\color{DarkOrchid},
+    commentstyle=\color{Green},%
+    numbers=left,
+    numberstyle={\tiny \color{black}},
+    numbersep=9pt,
+    emph=[1]{for,if,else,switch,case,while,return},emphstyle=[1]\color{red},
+	stepnumber=5,
+	tabsize=2
+}
+
+
+
 %\linespread{2}
 
 % \pagestyle{headings}
@@ -83,8 +105,18 @@ As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet
 \end{algorithm}
 
 
+
+
+\clearpage
+
+
 \section*{Appendix: Code}
 
+\lstinputlisting[caption=sphModel.hpp]{../sphModel.hpp}
+\lstinputlisting[caption=sphModel.cpp]{../sphModel.cpp}
+\lstinputlisting[caption=Simulation.cpp]{../Simulation.cpp}
+\lstinputlisting[caption=simulation.vsh]{../resources/simulation.vsh}
+\lstinputlisting[caption=simulation.fsh]{../resources/simulation.fsh}
 
 
 \clearpage

@@ -21,7 +21,7 @@
 	#include "Aluminum/Behavior.hpp"
 	#include "Aluminum/ResourceHandler.hpp"
 	#include "Aluminum/Texture.hpp"
-	#include "Aluminum/Renderer.hpp"
+	#include "Aluminum/RendererLinux.hpp"
 #elif defined _WIN32 || defined _WIN64
 	std::string platform = "WINDOWS";
 #else
@@ -44,12 +44,16 @@ float pi = glm::pi<float>();
 using namespace aluminum;
 
 
+// TODO: improve performance by only adding one single sphere instead of N spheres (just use different model matrices).
+// TODO: make liquid flow in from top
+// TODO: pass in only points to shader and use geometry shader to create 3d particles
+// TODO: see 3.5.1: flowing water and particle effects, stream output
 
-class Simulation : public Renderer {
+class Simulation : public RendererLinux {
 
 public:
 
-	static const unsigned N = 32;
+	static const unsigned N = 0; // 40;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
@@ -91,7 +95,7 @@ public:
 			MeshData md;
 			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
 			// addRect(md,4.f,4.f,100.f,vec3(0,0,0));
-			addSphere(md,fluidsimulation.getRadius(i),8,8);
+			addSphere(md,5*fluidsimulation.getRadius(i),8,8);
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -129,7 +133,7 @@ public:
 		// PROPAGATE MODEL
 		///////////////////////////////////////////////////////////
 
-		if(stepCounter < 5000) {
+		if(stepCounter < 0 /*5000*/) {
 			++stepCounter;
 			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
 			std::cout << fluidsimulation; // Output current status of Fluid particles
@@ -187,7 +191,7 @@ public:
 				fluidsimulation.getPosition(i,position);
 				fluidsimulation.getVelocity(i,velocity);
 
-				model = glm::translate(model,vec3(position[0],position[1],0));
+				model = glm::translate(model,vec3(position[0],position[1],position[2]));
 
 				// For Rotation of Cubes
 				/*
@@ -222,15 +226,15 @@ public:
 		
 		if(key == GLUT_KEY_UP || false) {
 			// camera.rotateX(glm::radians(-2.));
-			fluidsimulation.moveBoxY(dxBox);
+			// fluidsimulation.moveBoxY(dxBox);
 		} else if(key == GLUT_KEY_DOWN || false) {
 			// camera.rotateX(glm::radians(2.));
-			fluidsimulation.moveBoxY(-dxBox);
+			// fluidsimulation.moveBoxY(-dxBox);
 		} else if(key == GLUT_KEY_RIGHT || false) {
 			// camera.rotateY(glm::radians(2.));
-			fluidsimulation.moveBoxX(+dxBox);
+			// fluidsimulation.moveBoxX(+dxBox);
 		} else if(key == GLUT_KEY_LEFT || false) {
-			fluidsimulation.moveBoxX(-dxBox);
+			// fluidsimulation.moveBoxX(-dxBox);
 			// camera.rotateY(glm::radians(-2.));
 		}
 
