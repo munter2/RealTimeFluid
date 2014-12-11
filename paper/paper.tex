@@ -64,21 +64,32 @@
 \maketitle
 
 \abstract{
-	This paper talks about the implementation of a real time Fluid simulation displayed in OpenGL \dots blaaaaaaaaaaaaa
+	This paper explores the field of Smooth Particle Hydrodynamics (SPH), starting at its 
+beginnings as a tool to simulate astrophysical phenomena and following its evolution and 
+implementation as a way to simulate fluids such as water. We will then give a brief 
+mathematical background and ensuing algorithm of our SPH simulation followed by a detailed 
+explanation of it.
 }
 
 \clearpage
 
 \section{Introduction}
 %
-Hello World! This is how you can cite a paper \cite{realtimerendering} Let's go to a new line \\
-Let's go to a new paragraph \par\medskip
-Let's write a formula
-\begin{align*}
-	\sum_{i=0}^N \int_{-\infty}^\infty e^{-\frac{1}{2}x^2} \; dx
-\end{align*}
+\hspace{6 pt} Smoothed Particle Hydrodynamics (SPH) successfully simulates fluids by breaking up a 
+fluid body into individual parts, or particles. These particles together form a particle 
+system that simulates various gravitational forces. Fluid movement is simulated in the 
+system by moving particles around any particle moved, simulating a rippling, wave effect.
+\\
+\hspace*{6 pt} The ripple effect is created by first calculating which particles are surrounding 
+a particle moved, and these surrounding particles are moved according to the movement 
+of the first particle moved. But SPH wasn't originally intended to simulate liquid 
+substances, but astrophysical phenomena.
 %
-It's not that hard ;)
+
+\section{History}
+%
+something
+%
 
 \section{Mathematical Background}
 %
