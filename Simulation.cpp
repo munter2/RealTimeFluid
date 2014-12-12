@@ -70,15 +70,18 @@ public:
 	Behavior rotateBehavior;
 
 	bool gravityOn;
- 
-
 
 
 	SPH fluidsimulation = SPH(N); // Initialize Fluid simulation model with N particles
 		
 	
 	unsigned stepCounter = 0; // TODO: remove - step counter that keeps track of how many timesteps have been done - model stops after certain number of steps
-	
+
+	enum show { FLUID, FLUIDANDOBJECT, FLUIDANDOBJECTANDWALL };
+	unsigned showParticles = show::FLUID;
+	enum ccodes { METABALLS, NONE, SPEED, VELOCITY, PRESSURE, DENSITY };
+	unsigned colorcoding = ccodes::NONE;
+
 
 
 	void onCreate() {
@@ -88,10 +91,10 @@ public:
 		
 		rh.loadProgram(program, "resources/simulation", posLoc, normalLoc, -1, colLoc);
 
-		M = fluidsimulation.getTotalParticles(); // Render all particles
+		M = fluidsimulation.getTotalParticles();
 		mb = new MeshBuffer[M];
 
-		for(int i=0; i<M; ++i) {
+		for(unsigned i=0; i<M; ++i) {
 			MeshData md;
 			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
 			// addRect(md,4.f,4.f,100.f,vec3(0,0,0));
@@ -129,6 +132,46 @@ public:
 
 	void onFrame(){
 
+		std::string displayStr;
+		std::string colorcodingStr;
+		
+		switch(colorcoding) {
+			case ccodes::METABALLS:
+				colorcodingStr = "Metaballs";
+				break;
+			case ccodes::NONE:
+				colorcodingStr = "None";
+				break;
+			case ccodes::SPEED:
+				colorcodingStr = "Speed";
+				break;
+			case ccodes::VELOCITY:
+				colorcodingStr = "Velocity";
+				break;
+			case ccodes::PRESSURE:
+				colorcodingStr = "Pressure";
+				break;
+			case ccodes::DENSITY:
+				colorcodingStr = "Density";
+				break;
+		}
+
+		switch(showParticles) {
+			case show::FLUID: // Render fluid only
+				M = fluidsimulation.getFluidParticles();
+				displayStr = "Fluid";
+				break;
+			case show::FLUIDANDOBJECT: // Render fluid and immersed object
+				M = fluidsimulation.getObjectParticles();
+				displayStr = "Fluid + Object";
+				break;
+			case show::FLUIDANDOBJECTANDWALL: // Render all particles
+				M = fluidsimulation.getTotalParticles();
+				displayStr = "Fluid + Object + Walls";
+				break;
+		}
+		std::cout << "\nDisplay: " << displayStr << ",\tColorcoding: " << colorcodingStr;
+
 		///////////////////////////////////////////////////////////
 		// PROPAGATE MODEL
 		///////////////////////////////////////////////////////////
@@ -139,68 +182,35 @@ public:
 			std::cout << fluidsimulation; // Output current status of Fluid particles
 		}
 	
-		// Getting position data for rendering
-		/*
-
-			unsigned M = 5;
-
-			float* X = new float[3*M];
-			float* V = new float[3*M];
-
-			for(unsigned i=0; i<M; ++i) {
-				fluidsimulation.getPosition(i,(X+3*i));
-				fluidsimulation.getVelocity(i,(V+3*i));
-			}
-
-			// TODO: position = position, velocity = colorcoded
-			// TODO: opengl: allow switching from particle view to grid view
-
-			delete[] V;
-			delete[] X;
-		*/
-		
-
-		///////////////////////////////////////////////////////////
-
-
 
 		// Start displaying
     
 		glViewport(0, 0, width, height);
 		// glClearColor(0.1,0.1,0.1,1.0);
-		glClearColor(1.0,1.0,1.0,1.0);
+		// glClearColor(0,0,0,1.0);
+		glClearColor(0,.5,0,1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 		
 		if (camera.isTransformed) {
 			camera.transform();
 		}
 	 
-		vec3 totals = vec3(.0f,.0f,.0f); // rotateBehavior.tick(now()).totals(); // TODO: uncomment for rotation
+		vec3 totals = vec3(.0f,.0f,.0f);
 
+		
 		// Draw Cubes
-		for(int i=0; i<M; ++i) {
+		float position[3];
+		float velocity[3];
+		for(unsigned i=0; i<M; ++i) {
 			program.bind(); {
-		/*
-		proj = glm::perspective(45.0, 1.0, 0.1, 100.0);
-		view = glm::lookAt(vec3(0.0,0.0,100), vec3(0,0,0), vec3(0,1,0) );
-	*/	
 
 				mat4 model = mat4(1.0);
 
-				float position[3];
-				float velocity[3];
 				fluidsimulation.getPosition(i,position);
 				fluidsimulation.getVelocity(i,velocity);
 
 				model = glm::translate(model,vec3(position[0],position[1],position[2]));
 
-				// For Rotation of Cubes
-				/*
-				model = glm::rotate(model, -totals.x, vec3(1.0f,0.0f,0.0f));
-				model = glm::rotate(model, -totals.y, vec3(0.0f,1.0f,0.0f));
-				model = glm::rotate(model, -totals.z, vec3(0.0f,0.0f,1.0f));
-				*/
-				
 				glUniformMatrix4fv(program.uniform("model"), 1, 0, ptr(model));
 				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
@@ -221,22 +231,17 @@ public:
 
 		// FreeGlutGLView::specialkeys(key,x,y);
 
-		// Switch Cross Compatible with Linux/MacOS
-		
-		float dxBox = 1;
-		
+		// For interaction with MacOS Keycodes, replace '|| false' by '|| KEYCODE'
+	
+		// Rotating the Camera
 		if(key == GLUT_KEY_UP || false) {
-			// camera.rotateX(glm::radians(-2.));
-			// fluidsimulation.moveBoxY(dxBox);
+			camera.rotateX(glm::radians(-2.));
 		} else if(key == GLUT_KEY_DOWN || false) {
-			// camera.rotateX(glm::radians(2.));
-			// fluidsimulation.moveBoxY(-dxBox);
+			camera.rotateX(glm::radians(2.));
 		} else if(key == GLUT_KEY_RIGHT || false) {
-			// camera.rotateY(glm::radians(2.));
-			// fluidsimulation.moveBoxX(+dxBox);
+			camera.rotateY(glm::radians(-2.));
 		} else if(key == GLUT_KEY_LEFT || false) {
-			// fluidsimulation.moveBoxX(-dxBox);
-			// camera.rotateY(glm::radians(-2.));
+			camera.rotateY(glm::radians(+2.));
 		}
 
 	}
@@ -245,25 +250,42 @@ public:
 	void keyboard(unsigned char key, int x, int y) {
 
 		float dxCamera = 5;
+		float dxBox = 1;
 
+		// For interaction with MacOS Keycodes, replace '|| false' by '|| KEYCODE'
+		
 		if(key == ' ' || false) {
-			camera.resetVectors();
+			showParticles = (showParticles+1)%3;
+		
+		// Moving the Cube
+		} else if(key == 'q' || false) {
+			fluidsimulation.moveBox(-dxBox,SPH::_axis::X1);
+		} else if(key == 'w' || false) {
+			fluidsimulation.moveBox(+dxBox,SPH::_axis::X1);
 		} else if(key == 'a' || false) {
-			camera.rotateY(glm::radians(-2.));
+			fluidsimulation.moveBox(-dxBox,SPH::_axis::X2);
 		} else if(key == 's' || false) {
-			camera.rotateY(glm::radians(+2.));
-		} else if(key == 'n' || false) {
-			camera.translateZ(-dxCamera);
-		} else if(key == 'u' || false) {
-			camera.translateZ(+dxCamera);
-		} else if(key == 'h' || false) {
-			camera.translateX(+dxCamera);
-		} else if(key == 'l' || false) {
+			fluidsimulation.moveBox(+dxBox,SPH::_axis::X2);
+		} else if(key == 'z' || false) {
+			fluidsimulation.moveBox(-dxBox,SPH::_axis::X3);
+		} else if(key == 'x' || false) {
+			fluidsimulation.moveBox(+dxBox,SPH::_axis::X3);
+
+		// Moving the Camera
+		} else if(key == 'e' || false) {
 			camera.translateX(-dxCamera);
-		} else if(key == 'k' || false) {
+		} else if(key == 'r' || false) {
+			camera.translateX(+dxCamera);
+		} else if(key == 'd' || false) {
+			camera.translateZ(+dxCamera);
+		} else if(key == 'f' || false) {
+			camera.translateZ(-dxCamera);
+		} else if(key == 'c' || false) {
 			camera.translateY(-dxCamera);
-		} else if(key == 'j' || false) {
+		} else if(key == 'v' || false) {
 			camera.translateY(+dxCamera);
+
+		// Toggle Gravity
 		} else if(key == 'g' || false) {
 			if(gravityOn) {
 				fluidsimulation.setGravity(0);
@@ -272,6 +294,20 @@ public:
 				fluidsimulation.setGravity(-20);
 				gravityOn = true;
 			}
+
+		// Switch between colorcoding schemes
+		} else if(key == '0' || false) {
+			colorcoding = ccodes::METABALLS;
+		} else if(key == '9' || false) {
+			colorcoding = ccodes::NONE;
+		} else if(key == '8' || false) {
+			colorcoding = ccodes::SPEED;
+		} else if(key == '7' || false) {
+			colorcoding = ccodes::VELOCITY;
+		} else if(key == '6' || false) {
+			colorcoding = ccodes::PRESSURE;
+		} else if(key == '5' || false) {
+			colorcoding = ccodes::DENSITY;
 		}
 	}
     

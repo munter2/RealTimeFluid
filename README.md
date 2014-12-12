@@ -28,7 +28,7 @@ For more info, keep reading...
 Running the Program
 -----------------------------------------
 This simulation program relies on the OpenGL Aluminum framework 
-that we used in class.
+that we used in class (https://github.com/CreativeCodingLab/aluminum.git).
 The Working directory with the source files is expected to be 
 located in 'Aluminum/linux/SOME_SUBFOLDER/'.
 As of now, it only runs on linux machines (tested on Fedora 20),
@@ -58,9 +58,6 @@ The Makefile can be used as follows:
 
 	make run: is a handy shortcut to compile and run the 
 		program with one single command.
-
-	make new: another useful shortcut, equivalent to running
-		make clean + make pre + make build + make
 
 
 -----------------------------------------

@@ -5,8 +5,6 @@
 
 #include <iostream>
 #include <stdio.h>
-#include <cmath>
-#include <random>
 #include <unistd.h>
 
 using std::ostream;
@@ -14,6 +12,8 @@ using std::ostream;
 class SPH {
 
 	public:
+
+		enum _axis { X1, X2, X3 };
 
 		static const unsigned _ghostDepth = 3;
 		
@@ -35,7 +35,9 @@ class SPH {
 		// Applying elastic boundary conditions
 		void applyBoundary();
 
-		// Get Radius of Particle i
+		// Get number of particles
+		unsigned getFluidParticles() const;
+		unsigned getObjectParticles() const;
 		unsigned getTotalParticles() const;
 
 		// Write position to the 3-array x
@@ -75,8 +77,7 @@ class SPH {
 		void setGravity(float);
 
 		// Functions for changing Box position
-		// void moveBoxX(float);
-		// void moveBoxY(float);
+		void moveBox(float,unsigned);
 
 	private:
 
@@ -103,18 +104,23 @@ class SPH {
 		float* _r;
 
 		// Wall Coordinates
+		float _x1MinWall;
+		float _x1MaxWall;
 		float _x2MinWall;
 		float _x2MaxWall;
 		float _x3MinWall;
 		float _x3MaxWall;
 
 		// Box Coordinates
+		float _x1MinBox;
+		float _x1MaxBox;
 		float _x2MinBox;
 		float _x2MaxBox;
 		float _x3MinBox;
 		float _x3MaxBox;
 
 		// Velocity component introduced by Box movement
+		float _v1Box;
 		float _v2Box;
 		float _v3Box;
 

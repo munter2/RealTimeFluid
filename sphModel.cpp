@@ -1,5 +1,11 @@
 #include "sphModel.hpp"
 
+#include <cmath>
+#include <random>
+#include <string>
+
+
+
 // TODO: implement SPH interaction
 // TODO: introduce ghost particles on boundary
 
@@ -7,7 +13,7 @@ SPH::SPH(unsigned N)
 	:	_nParticles(N),
 		_nGhostWall(100),
 		_nGhostObject(0),
-		_nTotal(_nParticles+_nGhostWall+_nGhostObject),
+		_nTotal(_nParticles+_nGhostObject+_nGhostWall),
 		_x1(new float[_nTotal]),
 		_x2(new float[_nTotal]),
 		_x3(new float[_nTotal]),
@@ -19,14 +25,21 @@ SPH::SPH(unsigned N)
 		_a3(new float[_nTotal]),
 		_m(new float[_nTotal]),
 		_r(new float[_nTotal]),
+		_x1MinWall(-100),
+		_x1MaxWall(+100),
 		_x2MinWall(-100),
 		_x2MaxWall(+100),
 		_x3MinWall(-100),
 		_x3MaxWall(+100),
+		_x1MinBox(-40),
+		_x1MaxBox(+40),
 		_x2MinBox(-40),
 		_x2MaxBox(+40),
 		_x3MinBox(-100),
 		_x3MaxBox(+100),
+		_v1Box(0),
+		_v2Box(0),
+		_v3Box(0),
 		_g(0),
 		_damping(.8),
 		_T(0.0),
@@ -71,54 +84,9 @@ SPH::SPH(unsigned N)
 
 	}
 
-	// Initialize Ghost Particles in Wall
-	for(unsigned i=_nParticles; i<_nParticles+_nGhostWall; ++i) {
-		
-		int side = (i-_nParticles)/(.25*_nGhostWall); 
-		float ratio = 0;
-		
-		switch(side) {
-
-			// Position
-			case 0: // Bottom
-				ratio = float(i-_nParticles)/(.25*_nGhostWall); 
-				_x2[i] = -100 + 200*ratio;
-				_x3[i] = -100;
-				break;
-			case 1: // Top
-				ratio = float(i-_nParticles)/(.25*_nGhostWall)-1; 
-				_x2[i] = -100 + 200*ratio;
-				_x3[i] = +100;
-				break;
-			case 2: // Left
-				ratio = float(i-_nParticles)/(.25*_nGhostWall)-2; 
-				_x2[i] = -100;
-				_x3[i] = -100 + 200*ratio;
-				break;
-			case 3: // Right
-				ratio = float(i-_nParticles)/(.25*_nGhostWall)-3; 
-				_x2[i] = +100;
-				_x3[i] = -100 + 200*ratio;
-				break;
-		}
-		
-		_x1[i] = 0;
-		
-		// Velocities = 0 in boundary
-		_v1[i] = 0;
-		_v2[i] = 0;
-		_v3[i] = 0;
-
-		// Masses (assume all particles have the same mass)
-		_m[i] = 1e10;
-
-		// Radius / Support of particles
-		_r[i] = .2;
-
-	}
-
 	// Initialize Ghost Particles in Object
-	for(unsigned i=_nParticles+_nGhostWall; i<_nTotal; ++i) {
+	for(unsigned i=_nParticles; i<(_nParticles+_nGhostObject); ++i) {
+
 	
 		int side = (i-_nParticles-_nGhostWall)/(.25*_nGhostObject); 
 		float ratio = 0;
@@ -126,6 +94,7 @@ SPH::SPH(unsigned N)
 		float boxWidth = _x2MaxBox - _x2MinBox;
 		float boxHeight = _x3MaxBox - _x3MinBox;
 	
+		/*
 		// TODO: cast float to int
 		switch(side) {
 
@@ -151,6 +120,7 @@ SPH::SPH(unsigned N)
 				_x3[i] = _x3MinBox + boxHeight*ratio;
 				break;
 		}
+		*/
 		
 		
 		// Velocities = 0 in Object
@@ -164,7 +134,56 @@ SPH::SPH(unsigned N)
 		// Radius / Support of particles
 		_r[i] = 3;
 
+
 	}
+	// Initialize Ghost Particles in Wall
+	
+	for(unsigned i=_nParticles; i<_nTotal; ++i) {
+	
+		int side = (i-_nParticles)/(.25*_nGhostWall); 
+		float ratio = 0;
+		
+		/*
+		switch(side) {
+
+			// Position
+			case 0: // Bottom
+				ratio = float(i-_nParticles)/(.25*_nGhostWall); 
+				_x2[i] = -100 + 200*ratio;
+				_x3[i] = -100;
+				break;
+			case 1: // Top
+				ratio = float(i-_nParticles)/(.25*_nGhostWall)-1; 
+				_x2[i] = -100 + 200*ratio;
+				_x3[i] = +100;
+				break;
+			case 2: // Left
+				ratio = float(i-_nParticles)/(.25*_nGhostWall)-2; 
+				_x2[i] = -100;
+				_x3[i] = -100 + 200*ratio;
+				break;
+			case 3: // Right
+				ratio = float(i-_nParticles)/(.25*_nGhostWall)-3; 
+				_x2[i] = +100;
+				_x3[i] = -100 + 200*ratio;
+				break;
+		}
+		*/
+		
+		_x1[i] = 0;
+		
+		// Velocities = 0 in boundary
+		_v1[i] = 0;
+		_v2[i] = 0;
+		_v3[i] = 0;
+
+		// Masses (assume all particles have the same mass)
+		_m[i] = 1e10;
+
+		// Radius / Support of particles
+		_r[i] = .2;
+	}
+
 	
 }
 
@@ -309,49 +328,66 @@ void SPH::applyBoundary() {
 
 }
 
-/*
-void SPH::moveBoxX(float dx) {
-	float tmpMinX = _x2MinBox + dx;
-	float tmpMaxX = _x2MaxBox + dx;
-	if(tmpMinX > _x2MinWall && tmpMaxX < _x2MaxWall) {
-		_x2MinBox = tmpMinX;
-		_x2MaxBox = tmpMaxX;
-		
-		// Move Ghost particles
-		for(unsigned i=_nParticles+_nGhostWall; i<_nTotal; ++i) {
-			_x2[i] += dx;
-		}
 
-	} else {
-		std::cout << "You hit the wall";
+void SPH::moveBox(float dx, unsigned a) {
+
+	float *xMinWall, *xMaxWall;
+	float *xPtr, *vPtr;
+	std::string dirStr;
+	
+	switch(a) {
+		case _axis::X1:
+			dirStr = "X";
+			xMinWall = &_x1MinWall; xMaxWall = &_x1MaxWall;
+			xPtr = _x1; vPtr = _v1;
+			break;
+		case _axis::X2:
+			dirStr = "Y";
+			xMinWall = &_x2MinWall; xMaxWall = &_x2MaxWall;
+			xPtr = _x2; vPtr = _v2;
+			break;
+		case _axis::X3:
+			dirStr = "Z";
+			xMinWall = &_x3MinWall; xMaxWall = &_x3MaxWall;
+			xPtr = _x3; vPtr = _v3;
+			break;
+		default:
+			std::cout << "Error: Invalid axis selected (moveBox): axis=" << a;
+			return;
 	}
-	_v2Box = dx/_dt;
-	_boxMoved = true;
+
+	float* tmpXObj = new float[_nGhostObject];
+
+	// Translate Ghost particles
+	bool hitTheWall = false;
+	for(unsigned i=0; i<_nGhostObject; ++i) {
+		tmpXObj[i] = xPtr[_nParticles+i] + dx;
+		if(tmpXObj[i] < *xMinWall || tmpXObj[i] > *xMaxWall) {
+			hitTheWall = true; // You hit the wall - no movement possible
+		}
+	}
+
+	if(!hitTheWall) {
+		for(unsigned i=0; i<_nGhostObject; ++i) {
+			xPtr[_nParticles+i] = tmpXObj[i];
+			vPtr[_nParticles+i] = dx/_dt;
+		}
+		_boxMoved = true;
+		std::cout << "\nBox moved by " << dx << " along " << dirStr << "\n";
+	} else {
+		std::cout << "\nYou hit the wall";
+	}
+
+	if(tmpXObj) { delete[] tmpXObj; }
 
 }
 
-void SPH::moveBoxY(float dy) {
-	float tmpMinY = _x3MinBox + dy;
-	float tmpMaxY = _x3MaxBox + dy;
-	if(tmpMinY > _x3MinWall && tmpMaxY < _x3MaxWall) {
-		_x3MinBox = tmpMinY;
-		_x3MaxBox = tmpMaxY;
-		
-		// Move Ghost particles
-		for(unsigned i=_nParticles+_nGhostWall; i<_nTotal; ++i) {
-			_x3[i] += dy;
-		}
-
-	} else {
-		std::cout << "You hit the wall";
-	}
-	_v3Box = dy/_dt;
-	_boxMoved = true;
-		
-}
-*/
 
 float SPH::getRadius(unsigned i) const {
+	if(i>=_nTotal) {
+		std::cout << "Error: Index out of bounds (getRadius): i=" << i;
+		return NAN;
+	}
 	return _r[i];
 }
 
@@ -375,6 +411,12 @@ void SPH::setGravity(float g) {
 	_g = g;
 }
 
+unsigned SPH::getFluidParticles() const {
+	return _nParticles;
+}
+unsigned SPH::getObjectParticles() const {
+	return _nParticles + _nGhostObject;
+}
 unsigned SPH::getTotalParticles() const {
 	return _nTotal;
 }
