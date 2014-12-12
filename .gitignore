@@ -41,3 +41,6 @@ simulation
 *.log
 *.out
 *.xml
+
+# nested git repo
+paper/templates/
