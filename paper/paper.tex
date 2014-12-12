@@ -1,4 +1,4 @@
-\documentclass[fontsize=11pt]{scrartcl}
+\documentclass{sigchi}
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}				% special symbols
 \usepackage{fancyhdr}					% headers and footers
@@ -6,15 +6,18 @@
 \usepackage{graphicx}					% images
 \usepackage[font=footnotesize]{caption}	% smaller image label
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor} 					% highlighting
-\usepackage{hyperref}				    % for links (text or internet)
 \usepackage{amsmath}	    			% maths
 \usepackage{relsize}
 
-\usepackage[hyperref=true,style=authoryear,backend=biber]{biblatex}
+\usepackage[hyperref=true,style=sigchi,backend=biber,doititles]{biblatex}
 \usepackage{filecontents}
 \usepackage{setspace}
 \usepackage{fancyhdr}
 \usepackage[ruled,vlined]{algorithm2e}
+
+\usepackage{balance}  % to better equalize the last page
+\usepackage{times}    % comment if you want LaTeX's default font
+\usepackage{url}      % llt: nicely formatted URLs
 
 \usepackage{listings}
 
@@ -38,6 +41,48 @@
 
 
 
+
+% llt: Define a global style for URLs, rather that the default one
+\makeatletter
+\def\url@leostyle{%
+  \@ifundefined{selectfont}{\def\UrlFont{\sf}}{\def\UrlFont{\small\bf\ttfamily}}}
+\makeatother
+\urlstyle{leo}
+
+
+% To make various LaTeX processors do the right thing with page size.
+\def\pprw{8.5in}
+\def\pprh{11in}
+\special{papersize=\pprw,\pprh}
+\setlength{\paperwidth}{\pprw}
+\setlength{\paperheight}{\pprh}
+\setlength{\pdfpagewidth}{\pprw}
+\setlength{\pdfpageheight}{\pprh}
+
+% Make sure hyperref comes last of your loaded packages, 
+% to give it a fighting chance of not being over-written, 
+% since its job is to redefine many LaTeX commands.
+\usepackage[pdftex]{hyperref}
+\hypersetup{
+pdftitle={SIGCHI Conference Proceedings Format},
+pdfauthor={LaTeX},
+pdfkeywords={SIGCHI, proceedings, archival format},
+bookmarksnumbered,
+pdfstartview={FitH},
+colorlinks,
+citecolor=black,
+filecolor=black,
+linkcolor=black,
+urlcolor=black,
+breaklinks=true,
+}
+
+% create a shortcut to typeset table headings
+\newcommand\tabhead[1]{\small\textbf{#1}}
+
+
+
+
 %\linespread{2}
 
 % \pagestyle{headings}
@@ -49,29 +94,38 @@
 
 \subtitle{Computer Graphics CS 488}
 
-\author{Michael Berg \\ Matthias Untergassmair}
-
-
-\pagestyle{fancy}
-\rhead{\thepage}
-
-
+\numberofauthors{2}
+\author{
+  \alignauthor Matthias Untergassmair\\
+    \email{munter2@uic.edu}\\
+  \alignauthor Michael Berg\\
+    \email{mberg4@uic.edu}\\
+}
 
 
 \begin{document}
 
-
 \maketitle
 
-\abstract{
+
+\begin{abstract}
 	This paper explores the field of Smooth Particle Hydrodynamics (SPH), starting at its 
 beginnings as a tool to simulate astrophysical phenomena and following its evolution and 
 implementation as a way to simulate fluids such as water. We will then give a brief 
 mathematical background and ensuing algorithm of our SPH simulation followed by a detailed 
 explanation of it.
+\end{abstract}
+
+
+\keywords{
+	SPH, Smoothed Particle Hydrodynamics, OpenGL, Fluid Simulation, Real Time
 }
 
-\clearpage
+Download code at
+\begin{center}
+	\url{https://github.com/munter2/RealTimeFluid}
+\end{center}
+
 
 \section{Introduction}
 %
@@ -126,11 +180,13 @@ As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet
 	$a_i^{t + \Delta t} = a_i^{t + \Delta t} (x_i^{t + \Delta t}, m_i)$ from equation \ref{math:acceleration} \;
 \end{algorithm}
 
+\balance
 
+\nocite{*}
+\printbibliography
 
-
+\begin{comment}
 \clearpage
-
 
 \section*{Appendix: Code}
 
@@ -140,10 +196,7 @@ As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet
 \lstinputlisting[caption=simulation.vsh]{../resources/simulation.vsh}
 \lstinputlisting[caption=simulation.fsh]{../resources/simulation.fsh}
 
-
-\clearpage
-\nocite{*}
-\printbibliography
+\end{comment}
 
 
 \end{document}
