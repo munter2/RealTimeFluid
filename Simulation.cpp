@@ -83,7 +83,6 @@ public:
 	unsigned colorcoding = ccodes::NONE;
 
 
-
 	void onCreate() {
 
 		// Output Simulation state
@@ -201,6 +200,8 @@ public:
 		// Draw Cubes
 		float position[3];
 		float velocity[3];
+		vec3 normalizedVelocity;
+		float vmax = fluidsimulation.getVmax();
 		for(unsigned i=0; i<M; ++i) {
 			program.bind(); {
 
@@ -208,6 +209,8 @@ public:
 
 				fluidsimulation.getPosition(i,position);
 				fluidsimulation.getVelocity(i,velocity);
+				normalizedVelocity = vec3(velocity[0],velocity[1],velocity[2]);
+				normalizedVelocity = .5f*(vec3(1.f)+normalizedVelocity/vmax);
 
 				model = glm::translate(model,vec3(position[0],position[1],position[2]));
 
@@ -215,7 +218,8 @@ public:
 				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
 
-				glUniform3f(program.uniform("velocity"), std::abs(velocity[0])/100,velocity[1]/100,.25);
+				glUniform1i(program.uniform("ccflag"), colorcoding);
+				glUniform3fv(program.uniform("velocity"), 1, ptr(normalizedVelocity));
 
 				mb[i].draw();
 			} program.unbind();

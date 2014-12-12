@@ -69,6 +69,11 @@ class SPH {
 
 		// Return Potential Energy
 		float getEpot() const;
+
+		// Get Maximum Velocity component
+		inline float getVmax() const {
+			return _vmax;
+		}
 		
 		// Get Radius of Particle i
 		float getRadius(unsigned) const;
@@ -123,6 +128,9 @@ class SPH {
 		float _v1Box;
 		float _v2Box;
 		float _v3Box;
+
+		// Keep track of maximum velocity, needed for colorcoding in OpenGL
+		float _vmax; 
 
 
 		// Gravity

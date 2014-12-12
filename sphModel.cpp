@@ -3,6 +3,7 @@
 #include <cmath>
 #include <random>
 #include <string>
+#include <algorithm>
 
 
 
@@ -213,12 +214,16 @@ void SPH::timestep(float dt) {
 	// Update Forces
 	updateForces();
 
+	_vmax = 0;
+
 	for(unsigned i=0; i<_nParticles; ++i) {
 
 		// Update Velocities
 		_v1[i] += _dt*_a1[i];
 		_v2[i] += _dt*_a2[i];
 		_v3[i] += _dt*_a3[i];
+
+		_vmax = std::max(std::max(_vmax,std::abs(_v1[i])),std::max(std::abs(_v2[i]),std::abs(_v3[i])));
 
 		// Update Positions
 		_x1[i] += _dt*_v1[i];
