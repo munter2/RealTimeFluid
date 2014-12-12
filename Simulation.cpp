@@ -53,7 +53,7 @@ class Simulation : public RendererLinux {
 
 public:
 
-	static const unsigned N = 0; // 40;
+	static const unsigned N = 40;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
@@ -176,9 +176,9 @@ public:
 		// PROPAGATE MODEL
 		///////////////////////////////////////////////////////////
 
-		if(stepCounter < 0 /*5000*/) {
+		if(stepCounter < 5000) {
 			++stepCounter;
-			fluidsimulation.timestep(.05); // Propagate fluidsimulation in time
+			fluidsimulation.timestep(.02); // Propagate fluidsimulation in time
 			std::cout << fluidsimulation; // Output current status of Fluid particles
 		}
 	

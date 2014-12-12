@@ -66,19 +66,28 @@ Interacting with the application
 The following keyboard commands can be used to interact with
 the simulation / visualization
 
-	1,...,9:	Switch between available visualization modes:
+		1		go fullscreen
 
-		1		No colorcoding
-		2		Colorcoding by particle speed
-		3		Colorcoding by particle velocity
-		4		Colorcoding by preassure
-		0		Metaball visualization of fluid surface
+	5-0:		Switch between available visualization modes:
+
+		0		Metaball visualization (not implemented yet)
+		9		No colorcoding
+		8		Colorcoding by particle speed
+		7		Colorcoding by particle velocity
+		6		Colorcoding by preassure
+		5		Colorcoding by density
 
 	SPACE		Switch between displaying all particles,
 				displaying fluid only, and displaying fluid
 				with object but without walls
 
-	h,j,k,l		navigating the camera vim-style
-	u,n			navigating the camera in z-diraction (depth)
+	q,w			Move the object in x-direction
+	a,s			Move the object in y-direction
+	z,x			Move the object in z-direction
 
+	e,r			Move the camera in x-direction
+	d,f			Move the camera in y-direction
+	c,v			Move the camera in z-direction
 	ARROWS		rotating the camera
+
+	g			toggle gravity

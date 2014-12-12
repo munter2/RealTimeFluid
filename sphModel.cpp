@@ -280,11 +280,7 @@ void SPH::updateForces() {
 
 		}
 		_a3[i] += _g; // add gravity
-
 	}
-	std::cout << "Acceleration 1: " << _a1[0];
-	std::cout << "Acceleration 10: " << _a1[9];
-	std::cout << "Acceleration 100: " << _a1[99];
 }
 
 
