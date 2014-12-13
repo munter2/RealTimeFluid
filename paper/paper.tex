@@ -126,6 +126,7 @@ Download code at
 	\url{https://github.com/munter2/RealTimeFluid}
 \end{center}
 
+\clearpage
 
 \section{Introduction}
 %
@@ -164,9 +165,9 @@ where W is a function satisfying the condition
 particles surrounding the current particle the equation it's being applied to.
 \hspace*{6 pt} A Gaussian function is used for the kernel function, with the form
 \begin{align}
-\exp{\frac{-r^2}{h^2}}
+(\frac{1}{\pi h^2})^\frac{3}{2}  \exp{(\frac{-r^2}{h^2})}
 \end{align}
-where h is
+and h is
 \begin{align}
 h = b(<r^2> - <r>^2)^\frac{1}{2}
 \end{align}
@@ -175,6 +176,32 @@ and \textit{b} is adjustable.
 \begin{align}
 \phi = - G \int \frac{\rho_N(r')}{|r - r'|} dr'
 \end{align}
+with G being the gravitational constant. Substituting in eq. 1 turns the equation 
+of gravitational potential into
+\begin{align}
+\phi = - \frac{GM}{N} \sum_{j=1}^N \int \frac{W(r - r')}{|r - r'|} dr'
+\end{align}
+To finish the equation, starting with
+\begin{align}
+\triangledown^2I_j = -4 \pi W(r - r_j)
+\end{align}
+substituting gravitational potential for I
+\begin{align}
+\triangledown \rho = - \frac{GM}{N} \sum_{j=1}^N \left \lbrace - \frac{4 \pi}{u_j^2} \int_{0}^{u_j} 
+W(u) u^2 du \right \rbrace \triangledown u_j
+\end{align}
+where
+\begin{align}
+u_j = r - r_j
+\end{align}
+Adding in the Gaussian Function in eq. 3 for W yields
+\begin{align}
+\triangledown \phi = - \frac{GM}{N} \sum_{j=1}^N \frac{2}{u_j} \left ( \frac{f}{\pi} \right )^\frac{1}{2} 
+\left \lbrack \exp{(-f u_j^2)} - \frac{1}{u_j} \int_{0}^{u_j} \exp{(-f u^2)} du \right \rbrack 
+\triangledown u_j
+\end{align}
+This equation is the full solution to calculating the gravitational potential of all particles
+involved in the simulation.
 \\
 \hspace*{6 pt} The result of Gingold and Monaghan's theory and implementation was a robust 
 and extendable idea that could easily made more accurate "by increasing the number of particles 
@@ -215,6 +242,7 @@ As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet
 \nocite{*}
 \printbibliography
 
+\clearpage
 \begin{comment}
 \clearpage
 
