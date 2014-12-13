@@ -151,9 +151,39 @@ focuses attention on fluid elements" \cite{sphastrophysics}. In this implementat
 "move according to the Newtonian equations with forces due to the pressure gradient and 
 other body forces: gravity, rotation and magnetic" \cite{sphastrophysics}.
 \\
+\hspace*{6 pt} The set of equations utilized in Gingold and Monaghan's SPH implementation 
+is a density distribution calculated at each point
+\begin{align}
+	\rho_s(r) = \int W(r - r') \rho(r') dr'
+\end{align}
+where W is a function satisfying the condition
+\begin{align}
+\int W(r) dr = 1
+\end{align}
+\hspace*{6 pt} This density distribution equation is used to calculate the density of the 
+particles surrounding the current particle the equation it's being applied to.
+\hspace*{6 pt} A Gaussian function is used for the kernel function, with the form
+\begin{align}
+\exp{\frac{-r^2}{h^2}}
+\end{align}
+where h is
+\begin{align}
+h = b(<r^2> - <r>^2)^\frac{1}{2}
+\end{align}
+and \textit{b} is adjustable.
+\hspace*{6 pt} The gravitational potential of the particles is denoted by
+\begin{align}
+\phi = - G \int \frac{\rho_N(r')}{|r - r'|} dr'
+\end{align}
+\\
 \hspace*{6 pt} The result of Gingold and Monaghan's theory and implementation was a robust 
 and extendable idea that could easily made more accurate "by increasing the number of particles 
 and by using the devices known to improve Monte Carlo integration methods" \cite{sphastrophysics}.
+%
+
+\section{Smoothed Particle Hydrodynamics Overview}
+%
+
 %
 
 \section{Mathematical Background}
