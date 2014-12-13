@@ -75,7 +75,6 @@ public:
 	SPH fluidsimulation = SPH(N); // Initialize Fluid simulation model with N particles
 		
 	
-	unsigned stepCounter = 0; // TODO: remove - step counter that keeps track of how many timesteps have been done - model stops after certain number of steps
 
 	enum show { FLUID, FLUIDANDOBJECT, FLUIDANDOBJECTANDWALL };
 	unsigned showParticles = show::FLUID;
@@ -97,7 +96,7 @@ public:
 			MeshData md;
 			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
 			// addRect(md,4.f,4.f,100.f,vec3(0,0,0));
-			addSphere(md,5*fluidsimulation.getRadius(i),8,8);
+			addSphere(md,5/*fluidsimulation.getRadius(i)*/,8,8); // TODO: find out what makes it crash here
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -169,39 +168,30 @@ public:
 				displayStr = "Fluid + Object + Walls";
 				break;
 		}
-		std::cout << "\nDisplay: " << displayStr << ",\tColorcoding: " << colorcodingStr;
 
-		///////////////////////////////////////////////////////////
-		// PROPAGATE MODEL
-		///////////////////////////////////////////////////////////
-
-		if(stepCounter < 5000) {
-			++stepCounter;
-			fluidsimulation.timestep(.02); // Propagate fluidsimulation in time
+		// PROPAGATE MODEL AND OUTPUT
+		if(fluidsimulation.getTime() < 10.0) {
+		// if(fluidsimulation.getTimeStepNumber() < 10) {
+			fluidsimulation.timestep(.01); // Propagate fluidsimulation in time
+			std::cout << "\nDisplay: " << displayStr << ",\tColorcoding: " << colorcodingStr;
 			std::cout << fluidsimulation; // Output current status of Fluid particles
 		}
 	
 
-		// Start displaying
-    
+		// Start rendering
 		glViewport(0, 0, width, height);
-		// glClearColor(0.1,0.1,0.1,1.0);
-		// glClearColor(0,0,0,1.0);
-		glClearColor(0,.5,0,1.0);
+		glClearColor(0,0,0,1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 		
 		if (camera.isTransformed) {
 			camera.transform();
 		}
 	 
-		vec3 totals = vec3(.0f,.0f,.0f);
-
-		
-		// Draw Cubes
 		float position[3];
 		float velocity[3];
 		vec3 normalizedVelocity;
 		float vmax = fluidsimulation.getVmax();
+
 		for(unsigned i=0; i<M; ++i) {
 			program.bind(); {
 
@@ -220,6 +210,7 @@ public:
 
 				glUniform1i(program.uniform("ccflag"), colorcoding);
 				glUniform3fv(program.uniform("velocity"), 1, ptr(normalizedVelocity));
+				glUniform1f(program.uniform("mass"), fluidsimulation.getMass(i));
 
 				mb[i].draw();
 			} program.unbind();
@@ -232,32 +223,24 @@ public:
 	// Keyboard Interaction
 	
 	void specialkeys(int key, int x, int y) {
-
-		// FreeGlutGLView::specialkeys(key,x,y);
-
 		// For interaction with MacOS Keycodes, replace '|| false' by '|| KEYCODE'
-	
 		// Rotating the Camera
 		if(key == GLUT_KEY_UP || false) {
 			camera.rotateX(glm::radians(-2.));
 		} else if(key == GLUT_KEY_DOWN || false) {
 			camera.rotateX(glm::radians(2.));
 		} else if(key == GLUT_KEY_RIGHT || false) {
-			camera.rotateY(glm::radians(-2.));
-		} else if(key == GLUT_KEY_LEFT || false) {
 			camera.rotateY(glm::radians(+2.));
+		} else if(key == GLUT_KEY_LEFT || false) {
+			camera.rotateY(glm::radians(-2.));
 		}
-
 	}
 
 
 	void keyboard(unsigned char key, int x, int y) {
-
 		float dxCamera = 5;
 		float dxBox = 1;
-
 		// For interaction with MacOS Keycodes, replace '|| false' by '|| KEYCODE'
-		
 		if(key == ' ' || false) {
 			showParticles = (showParticles+1)%3;
 		
@@ -323,5 +306,3 @@ int main(){
 	Simulation().start(); 
 	return 0;
 }
-
-

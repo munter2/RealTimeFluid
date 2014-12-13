@@ -6,6 +6,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
+#include <cmath>
+
 
 using std::ostream;
 
@@ -15,7 +17,7 @@ class SPH {
 
 		enum _axis { X1, X2, X3 };
 
-		static const unsigned _ghostDepth = 3;
+		static const unsigned _ghostDepth = 1;
 		
 		// Constructor
 		SPH(unsigned); 
@@ -36,9 +38,23 @@ class SPH {
 		void applyBoundary();
 
 		// Get number of particles
-		unsigned getFluidParticles() const;
-		unsigned getObjectParticles() const;
-		unsigned getTotalParticles() const;
+		inline unsigned getFluidParticles() const {
+			return _nParticles;
+		}
+		inline unsigned getObjectParticles() const {
+			return _nParticles + _nGhostObject;
+		}
+		inline unsigned getTotalParticles() const {
+			return _nTotal;
+		}
+		inline float getTime() const {
+			return _T;
+		}
+		inline float getTimeStepNumber() const {
+			return _tStep;
+		}
+
+
 
 		// Write position to the 3-array x
 		inline void getPosition(unsigned index, float* x) {
@@ -76,7 +92,23 @@ class SPH {
 		}
 		
 		// Get Radius of Particle i
-		float getRadius(unsigned) const;
+		inline float getRadius(unsigned i) const {
+			if(i>=_nTotal) {
+				std::cout << "Error: Index out of bounds (getRadius): i=" << i;
+				return NAN;
+			}
+			return _r[i];
+		}
+		
+		// Get Mass of Particle i
+		inline float getMass(unsigned i) const {
+			if(i>=_nTotal) {
+				std::cout << "Error: Index out of bounds (getMass): i=" << i;
+				return NAN;
+			}
+			return _m[i];
+		}
+
 
 		// Setting Gravity
 		void setGravity(float);
@@ -87,8 +119,11 @@ class SPH {
 	private:
 
 		unsigned _nParticles; // Number of fluid particles
-		unsigned _nGhostWall; // Number of ghost particles in the walls
 		unsigned _nGhostObject; // Number of ghost particles in the object
+		unsigned _x1BoxDim;
+		unsigned _x2BoxDim;
+		unsigned _x3BoxDim;
+		unsigned _nGhostWall; // Number of ghost particles in the walls
 		unsigned _nTotal; // Total number of particles
 
 		// Array of particle coordinates & velocities & accelerations
@@ -108,30 +143,8 @@ class SPH {
 		// Array of particle radii
 		float* _r;
 
-		// Wall Coordinates
-		float _x1MinWall;
-		float _x1MaxWall;
-		float _x2MinWall;
-		float _x2MaxWall;
-		float _x3MinWall;
-		float _x3MaxWall;
-
-		// Box Coordinates
-		float _x1MinBox;
-		float _x1MaxBox;
-		float _x2MinBox;
-		float _x2MaxBox;
-		float _x3MinBox;
-		float _x3MaxBox;
-
-		// Velocity component introduced by Box movement
-		float _v1Box;
-		float _v2Box;
-		float _v3Box;
-
 		// Keep track of maximum velocity, needed for colorcoding in OpenGL
 		float _vmax; 
-
 
 		// Gravity
 		float _g; 

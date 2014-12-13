@@ -6,14 +6,13 @@
 #include <algorithm>
 
 
-
-// TODO: implement SPH interaction
-// TODO: introduce ghost particles on boundary
-
 SPH::SPH(unsigned N)
 	:	_nParticles(N),
-		_nGhostWall(100),
-		_nGhostObject(0),
+		_nGhostObject(10),
+		_x1BoxDim(0), // keep it 2d
+		_x2BoxDim(200),
+		_x3BoxDim(200),
+		_nGhostWall(2*(_x2BoxDim+1+_x3BoxDim+1)*_ghostDepth), // keep it 2d
 		_nTotal(_nParticles+_nGhostObject+_nGhostWall),
 		_x1(new float[_nTotal]),
 		_x2(new float[_nTotal]),
@@ -26,21 +25,7 @@ SPH::SPH(unsigned N)
 		_a3(new float[_nTotal]),
 		_m(new float[_nTotal]),
 		_r(new float[_nTotal]),
-		_x1MinWall(-100),
-		_x1MaxWall(+100),
-		_x2MinWall(-100),
-		_x2MaxWall(+100),
-		_x3MinWall(-100),
-		_x3MaxWall(+100),
-		_x1MinBox(-40),
-		_x1MaxBox(+40),
-		_x2MinBox(-40),
-		_x2MaxBox(+40),
-		_x3MinBox(-100),
-		_x3MaxBox(+100),
-		_v1Box(0),
-		_v2Box(0),
-		_v3Box(0),
+		_vmax(1e-10),
 		_g(0),
 		_damping(.8),
 		_T(0.0),
@@ -48,6 +33,12 @@ SPH::SPH(unsigned N)
 		_dt(0),
 		_boxMoved(false)
 {
+
+	if(_x1BoxDim%2 || _x2BoxDim%2 || _x3BoxDim%2) {
+		std::cout << "Error: please select even dimension for box";
+		throw -1;
+	}
+
 	std::cout << "\nInitializing Model...";
 	
 	// Seeding random number generator and set parameters for normal distribution
@@ -55,19 +46,19 @@ SPH::SPH(unsigned N)
 	// std::mt19937 e2(rd());
 	std::mt19937 e2(42);
 	float mean = 0; // mean velocity
-	float stddev = 50; // standard deviation of velocity
+	float stddev = 10; // standard deviation of velocity
 	std::normal_distribution<> dist(mean,stddev);
 
 	// Initialize Fluid Particles
 	for(unsigned i=0; i<_nParticles; ++i) {
 		
 		// Position
-		_x1[i] = 0;
-		_x2[i] = (i%2 ? -50 : 50) + .1*dist(e2);
-		_x3[i] = fmod(rand(),200)-100;
+		_x1[i] = 0; // keep it 2d
+		_x2[i] = fmod(rand(),_x2BoxDim)-.5*_x2BoxDim;
+		_x3[i] = fmod(rand(),_x3BoxDim)-.5*_x3BoxDim;
 		
-		// Masses (assume all particles have the same mass)
-		_m[i] = 1; // 1e-6 * (1+i%3);
+		// Masses (assume two groups of particle masses)
+		_m[i] = .5*(1+i%2);
 
 		// Radius / Support of particles
 		_r[i] = 1; // 1+i%3;
@@ -76,116 +67,70 @@ SPH::SPH(unsigned N)
 		updateForces();
 
 		// Velocities (sampled from random normal distribution)
-		_v1[i] = dist(e2);
+		_v1[i] = 0; // keep it 2d
 		_v2[i] = dist(e2);
-		_v3[i] = 0;
-
-		// _v1[i] = 0; // TODO: remove, v_x = 0 only for debugging
-		// _v2[i] = 40.f; // TODO: remove, v_y = 40 only for debugging
+		_v3[i] = dist(e2);
 
 	}
 
 	// Initialize Ghost Particles in Object
 	for(unsigned i=_nParticles; i<(_nParticles+_nGhostObject); ++i) {
 
-	
-		int side = (i-_nParticles-_nGhostWall)/(.25*_nGhostObject); 
-		float ratio = 0;
-
-		float boxWidth = _x2MaxBox - _x2MinBox;
-		float boxHeight = _x3MaxBox - _x3MinBox;
-	
-		/*
-		// TODO: cast float to int
-		switch(side) {
-
-			// Position
-			case 0: // Bottom
-				ratio = float(i-_nParticles-_nGhostWall)/(.25*_nGhostObject); 
-				_x2[i] = _x3MinBox + boxWidth*ratio;
-				_x3[i] = _x3MinBox;
-				break;
-			case 1: // Top
-				ratio = float(i-_nParticles-_nGhostWall)/(.25*_nGhostObject)-1; 
-				_x2[i] = _x3MinBox + boxWidth*ratio;
-				_x3[i] = _x3MaxBox;
-				break;
-			case 2: // Left
-				ratio = float(i-_nParticles-_nGhostWall)/(.25*_nGhostObject)-2; 
-				_x2[i] = _x3MinBox;
-				_x3[i] = _x3MinBox + boxHeight*ratio;
-				break;
-			case 3: // Right
-				ratio = float(i-_nParticles-_nGhostWall)/(.25*_nGhostObject)-3; 
-				_x2[i] = _x3MaxBox;
-				_x3[i] = _x3MinBox + boxHeight*ratio;
-				break;
-		}
-		*/
-		
-		
-		// Velocities = 0 in Object
-		_v1[i] = 0;
-		_v2[i] = 0;
-		_v3[i] = 0;
-
-		// Masses (assume all particles have the same mass)
-		_m[i] = 1e10;
-
-		// Radius / Support of particles
-		_r[i] = 3;
-
-
-	}
-	// Initialize Ghost Particles in Wall
-	
-	for(unsigned i=_nParticles; i<_nTotal; ++i) {
-	
-		int side = (i-_nParticles)/(.25*_nGhostWall); 
-		float ratio = 0;
-		
-		/*
-		switch(side) {
-
-			// Position
-			case 0: // Bottom
-				ratio = float(i-_nParticles)/(.25*_nGhostWall); 
-				_x2[i] = -100 + 200*ratio;
-				_x3[i] = -100;
-				break;
-			case 1: // Top
-				ratio = float(i-_nParticles)/(.25*_nGhostWall)-1; 
-				_x2[i] = -100 + 200*ratio;
-				_x3[i] = +100;
-				break;
-			case 2: // Left
-				ratio = float(i-_nParticles)/(.25*_nGhostWall)-2; 
-				_x2[i] = -100;
-				_x3[i] = -100 + 200*ratio;
-				break;
-			case 3: // Right
-				ratio = float(i-_nParticles)/(.25*_nGhostWall)-3; 
-				_x2[i] = +100;
-				_x3[i] = -100 + 200*ratio;
-				break;
-		}
-		*/
-		
 		_x1[i] = 0;
-		
-		// Velocities = 0 in boundary
+		_x2[i] = 100;
+		_x3[i] = 100;
 		_v1[i] = 0;
 		_v2[i] = 0;
 		_v3[i] = 0;
-
-		// Masses (assume all particles have the same mass)
-		_m[i] = 1e10;
-
-		// Radius / Support of particles
-		_r[i] = .2;
-	}
-
 	
+		_r[i] = 1;
+		_m[i] = 1;
+
+	}
+	
+	// Initialize Ghost Particles in Wall
+
+	// temporary indices for loop
+	unsigned zeroIndex; 
+	unsigned index1height, index2height; 
+
+	for(unsigned d=0; d<_ghostDepth; ++d) {
+		
+		zeroIndex = _nParticles + _nGhostObject + 2*d*(_x2BoxDim+1+_x3BoxDim+1);
+
+		std::cout << "\n\n---------------------------------\n d = " << d << "\t\tZEROINDEX = " << zeroIndex;
+
+		for(unsigned i=0; i<(2*_x2BoxDim+1); ++i) {
+			_x1[zeroIndex+i] = 0; // keep it 2d
+			// _x2[zeroIndex+i] = (i%2 ? 1 : -1) * (.5*_x3BoxDim + d); // place on alternating sides
+			// _x3[zeroIndex+i] = -.5*_x2BoxDim + i; // place at distance 1 apart
+			
+			// v=0 for wall particles
+			_v1[zeroIndex+i] = 0;
+			_v2[zeroIndex+i] = 0;
+			_v3[zeroIndex+i] = 0;
+
+			_m[zeroIndex+i] = 1e10;
+			_r[zeroIndex+i] = 1;
+		}
+
+		zeroIndex += 2*_x2BoxDim;
+
+		for(unsigned i=0; i<(2*_x3BoxDim+1); ++i) {
+			_x1[zeroIndex+i] = 0; // keep it 2d
+			// _x2[zeroIndex+i] = -.5*_x3BoxDim + i; // place at distance 1 apart
+			// _x3[zeroIndex+i] = (i%2 ? 1 : -1) * (.5*_x2BoxDim + d); // place on alternating sides
+			
+			// v=0 for wall particles
+			_v1[zeroIndex+i] = 0;
+			_v2[zeroIndex+i] = 0;
+			_v3[zeroIndex+i] = 0;
+
+			_m[zeroIndex+i] = 1e10;
+			_r[zeroIndex+i] = 1;
+		}
+	
+	}
 }
 
 SPH::~SPH() {
@@ -253,46 +198,36 @@ void SPH::updateForces() {
 		_a2[i] = 0;
 		_a3[i] = 0;
 
-		for(unsigned a=0; a<_nParticles /*_nTotal*/; ++a) {
+		for(unsigned a=0; a<_nTotal; ++a) {
 
 			if(a == i) continue; // Particles don't interact with themselves
-
+			
 			d1 = _x1[a] - _x1[i];
 			d2 = _x2[a] - _x2[i];
 			d3 = _x3[a] - _x3[i];
 
+			// Compute Spherical Coordinates
 			R = sqrt(d1*d1+d2*d2+d3*d3);
-
-			if (R == 0) continue;
-
-			phi = atan2(d2,d1); // d2 or d3
+			if (R == 0) continue; // Avoid infinite values 
+			phi = atan2(d2,d1);
 			theta = acos(d3/R);
 
-			// F = (std::abs(d1) > 70 ? -d1 : d1);
-			F = (R>50 ? R : -10000/R);
-			// R-50; // (R > 70 ? -R : R); // (R!=0 ? 1/R : 0); // Only Temporary force computation: Hooke's law
+			// Compute Force
+			F = .1*(R>10 ? R : -1000000/R); // TODO: replace by SPH force computation
 
+			// Convert back to cartesian coordinates
 			_a1[i] += F*sin(theta)*cos(phi);
 			_a2[i] += F*sin(theta)*sin(phi);
 			_a3[i] += F*cos(theta);
 			
-			// No Interaction
-			/*
-			_a1[i] = 0;
-			_a2[i] = 0;
-			_a3[i] = 0;
-			*/
-
 		}
+		_a1[i] = 0; // Keep it 2d
 		_a3[i] += _g; // add gravity
 	}
 }
 
 
 void SPH::applyBoundary() {
-
-	float center1Box = .5*(_x2MinBox+_x2MaxBox);
-	float center2Box = .5*(_x3MinBox+_x3MaxBox);
 
 	for(unsigned i=0; i<_nParticles; ++i) {
 
@@ -302,29 +237,9 @@ void SPH::applyBoundary() {
 
 		// Check if the box was moved within the last time interval
 		if(_boxMoved) {
-			v2Box = _v2Box;
-			v3Box = _v3Box;
 			_boxMoved = false; // movement of box has been considered, set to false now
-			_v2Box = 0; // reset velocity components of Box to zero
-			_v3Box = 0; // reset velocity components of Box to zero
 		}
 
-		// Elastic reflection on wall
-		if(_x1[i] <= _x2MinWall) _v1[i] = +_damping*std::abs(_v1[i]);
-		if(_x1[i] >= _x2MaxWall) _v1[i] = -_damping*std::abs(_v1[i]);
-		if(_x2[i] <= _x3MinWall) _v2[i] = +_damping*std::abs(_v2[i]);
-		if(_x2[i] >= _x3MaxWall) _v2[i] = -_damping*std::abs(_v2[i]);
-
-		// Elastic reflection on box
-		// if(_x1[i] >= _x2MinBox && _x1[i] < center1Box /*&& _x2[i] >= _x3MinBox && _x2[i] < center2Box*/) _v1[i] = -_damping*std::abs(_v1[i]) + v1Box;
-		// if(_x1[i] <= _x2MaxBox && _x1[i] > center1Box /*&& _x2[i] <= _x3MaxBox && _x2[i] > center2Box*/) _v1[i] = +_damping*std::abs(_v1[i]) + v1Box;
-		// if(_x2[i] >= _x3MinBox && _x2[i] < center2Box /*&& _x2[i] >= _x3MinBox && _x2[i] < center2Box*/) _v2[i] = +_damping*std::abs(_v2[i]) + v2Box;
-		// if(_x2[i] <= _x3MaxBox && _x2[i] > center2Box /*&& _x2[i] <= _x3MaxBox && _x2[i] > center2Box*/) _v2[i] = +_damping*std::abs(_v2[i]) + v2Box;
-
-		/*
-		if(_x2[i] >= _x3MinBox && _x2[i] < center2Box) _v2[i] = -std::abs(_v2[i]);
-		if(_x2[i] <= _x3MaxBox && _x2[i] > center2Box) _v2[i] = +std::abs(_v2[i]);
-*/	
 	}
 
 }
@@ -332,24 +247,24 @@ void SPH::applyBoundary() {
 
 void SPH::moveBox(float dx, unsigned a) {
 
-	float *xMinWall, *xMaxWall;
+	unsigned *xDim;
 	float *xPtr, *vPtr;
 	std::string dirStr;
 	
 	switch(a) {
 		case _axis::X1:
 			dirStr = "X";
-			xMinWall = &_x1MinWall; xMaxWall = &_x1MaxWall;
+			xDim = &_x1BoxDim;
 			xPtr = _x1; vPtr = _v1;
 			break;
 		case _axis::X2:
 			dirStr = "Y";
-			xMinWall = &_x2MinWall; xMaxWall = &_x2MaxWall;
+			xDim = &_x2BoxDim;
 			xPtr = _x2; vPtr = _v2;
 			break;
 		case _axis::X3:
 			dirStr = "Z";
-			xMinWall = &_x3MinWall; xMaxWall = &_x3MaxWall;
+			xDim = &_x3BoxDim;
 			xPtr = _x3; vPtr = _v3;
 			break;
 		default:
@@ -359,11 +274,14 @@ void SPH::moveBox(float dx, unsigned a) {
 
 	float* tmpXObj = new float[_nGhostObject];
 
+	float xMinWall = -.5*(*xDim);
+	float xMaxWall = +.5*(*xDim);
+
 	// Translate Ghost particles
 	bool hitTheWall = false;
 	for(unsigned i=0; i<_nGhostObject; ++i) {
 		tmpXObj[i] = xPtr[_nParticles+i] + dx;
-		if(tmpXObj[i] < *xMinWall || tmpXObj[i] > *xMaxWall) {
+		if(tmpXObj[i] < xMinWall || tmpXObj[i] > xMaxWall) {
 			hitTheWall = true; // You hit the wall - no movement possible
 		}
 	}
@@ -383,15 +301,6 @@ void SPH::moveBox(float dx, unsigned a) {
 
 }
 
-
-float SPH::getRadius(unsigned i) const {
-	if(i>=_nTotal) {
-		std::cout << "Error: Index out of bounds (getRadius): i=" << i;
-		return NAN;
-	}
-	return _r[i];
-}
-
 float SPH::getEkin() const {
 	float Ekin;
 	for(unsigned i=0; i<_nParticles; ++i) {
@@ -401,27 +310,19 @@ float SPH::getEkin() const {
 }
 
 float SPH::getEpot() const {
-	float Epot;
+	float Egrav = 0;
+	float Einternal = 0;
 	for(unsigned i=0; i<_nParticles; ++i) {
-		Epot += _m[i] * _x2[i];
+		Egrav += _m[i] * _x2[i];
 	}
+	// TODO: add potential energy of fluid itself
+	Epot = Egrav; // + Einternal
 	return _g*Epot;
 }
 
 void SPH::setGravity(float g) {
 	_g = g;
 }
-
-unsigned SPH::getFluidParticles() const {
-	return _nParticles;
-}
-unsigned SPH::getObjectParticles() const {
-	return _nParticles + _nGhostObject;
-}
-unsigned SPH::getTotalParticles() const {
-	return _nTotal;
-}
-
 
 // Overloaded output operator
 ostream& operator<<(ostream& os, const SPH& s) {
@@ -431,26 +332,24 @@ ostream& operator<<(ostream& os, const SPH& s) {
 	os << "\nGravity:\t" << s._g;
 	os << "\nKinetic Energy:   \t" << s.getEkin();
 	os << "\nPotential Energy: \t" << s.getEpot();
-	os << "\nBox:\t[ " << s._x2MinBox << " , " << s._x2MaxBox << " ] x [ " << s._x3MinBox << " , " << s._x3MaxBox << " ]";
 	
-	unsigned nOutput = 2; // Only output first particle
+	unsigned nOutput = 1; // Only output first particle
 	// unsigned nOutput = s._nParticles; // All particles
 
 	os << "\nPosition:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
-		printf("%3.4f %3.4f %3.4f | ", s._x1[i], s._x2[i], s._x3[i]);
+		printf("%12.4f %12.4f %12.4f | ", s._x1[i], s._x2[i], s._x3[i]);
 	}
 	
 	os << "\nVelocity:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
-		printf("%3.4f %3.4f %3.4f | ", s._v1[i], s._v2[i], s._v3[i]);
+		printf("%12.4f %12.4f %12.4f | ", s._v1[i], s._v2[i], s._v3[i]);
 	}
 
 	os << "\nAcceleration:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
-		printf("%3.4f %3.4f %3.4f | ", s._a1[i], s._a2[i], s._a3[i]);
+		printf("%12.4f %12.4f %12.4f | ", s._a1[i], s._a2[i], s._a3[i]);
 	}
-
 
 	os << "\n==========================================================";
 	os << "\n";
