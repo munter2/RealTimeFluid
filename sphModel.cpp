@@ -8,10 +8,10 @@
 
 SPH::SPH(unsigned N)
 	:	_nParticles(N),
-		_nGhostObject(10),
+		_nGhostObject(_uicSize),
 		_x1BoxDim(0), // keep it 2d
-		_x2BoxDim(200),
-		_x3BoxDim(200),
+		_x2BoxDim(280),
+		_x3BoxDim(100),
 		_nGhostWall(2*(_x2BoxDim+1+_x3BoxDim+1)*_ghostDepth), // keep it 2d
 		_nTotal(_nParticles+_nGhostObject+_nGhostWall),
 		_x1(new float[_nTotal]),
@@ -40,13 +40,15 @@ SPH::SPH(unsigned N)
 	}
 
 	std::cout << "\nInitializing Model...";
+
+	initObjectCoords();
 	
 	// Seeding random number generator and set parameters for normal distribution
 	// std::random_device rd; // Uncomment to make it even more random ;)
 	// std::mt19937 e2(rd());
 	std::mt19937 e2(42);
 	float mean = 0; // mean velocity
-	float stddev = 10; // standard deviation of velocity
+	float stddev = 4; // standard deviation of velocity
 	std::normal_distribution<> dist(mean,stddev);
 
 	// Initialize Fluid Particles
@@ -76,9 +78,12 @@ SPH::SPH(unsigned N)
 	// Initialize Ghost Particles in Object
 	for(unsigned i=_nParticles; i<(_nParticles+_nGhostObject); ++i) {
 
-		_x1[i] = 0;
-		_x2[i] = 100;
-		_x3[i] = 100;
+		unsigned objectIndex = i - _nParticles;
+
+		_x1[i] = _uic[0][objectIndex];
+		_x2[i] = _uic[1][objectIndex];
+		_x3[i] = _uic[2][objectIndex];
+
 		_v1[i] = 0;
 		_v2[i] = 0;
 		_v3[i] = 0;
@@ -98,28 +103,10 @@ SPH::SPH(unsigned N)
 		
 		zeroIndex = _nParticles + _nGhostObject + 2*d*(_x2BoxDim+1+_x3BoxDim+1);
 
-		std::cout << "\n\n---------------------------------\n d = " << d << "\t\tZEROINDEX = " << zeroIndex;
-
-		for(unsigned i=0; i<(2*_x2BoxDim+1); ++i) {
-			_x1[zeroIndex+i] = 0; // keep it 2d
-			// _x2[zeroIndex+i] = (i%2 ? 1 : -1) * (.5*_x3BoxDim + d); // place on alternating sides
-			// _x3[zeroIndex+i] = -.5*_x2BoxDim + i; // place at distance 1 apart
-			
-			// v=0 for wall particles
-			_v1[zeroIndex+i] = 0;
-			_v2[zeroIndex+i] = 0;
-			_v3[zeroIndex+i] = 0;
-
-			_m[zeroIndex+i] = 1e10;
-			_r[zeroIndex+i] = 1;
-		}
-
-		zeroIndex += 2*_x2BoxDim;
-
 		for(unsigned i=0; i<(2*_x3BoxDim+1); ++i) {
 			_x1[zeroIndex+i] = 0; // keep it 2d
-			// _x2[zeroIndex+i] = -.5*_x3BoxDim + i; // place at distance 1 apart
-			// _x3[zeroIndex+i] = (i%2 ? 1 : -1) * (.5*_x2BoxDim + d); // place on alternating sides
+			_x2[zeroIndex+i] = (i%2 ? 1 : -1) * (.5*_x2BoxDim + d); // place on alternating sides
+			_x3[zeroIndex+i] = -.5*_x3BoxDim + i/2; // place at distance 1 apart
 			
 			// v=0 for wall particles
 			_v1[zeroIndex+i] = 0;
@@ -127,7 +114,23 @@ SPH::SPH(unsigned N)
 			_v3[zeroIndex+i] = 0;
 
 			_m[zeroIndex+i] = 1e10;
-			_r[zeroIndex+i] = 1;
+			_r[zeroIndex+i] = .4;
+		}
+
+		zeroIndex += 2*_x3BoxDim;
+		
+		for(unsigned i=0; i<(2*_x2BoxDim+1); ++i) {
+			_x1[zeroIndex+i] = 0; // keep it 2d
+			_x2[zeroIndex+i] = -.5*_x2BoxDim + i/2; // place at distance 1 apart
+			_x3[zeroIndex+i] = (i%2 ? 1 : -1) * (.5*_x3BoxDim + d); // place on alternating sides
+			
+			// v=0 for wall particles
+			_v1[zeroIndex+i] = 0;
+			_v2[zeroIndex+i] = 0;
+			_v3[zeroIndex+i] = 0;
+
+			_m[zeroIndex+i] = 1e10;
+			_r[zeroIndex+i] = .4;
 		}
 	
 	}
@@ -146,7 +149,7 @@ SPH::~SPH() {
 	if(_x3) { delete[] _x3; }
 	if(_x2) { delete[] _x2; }
 	if(_x1) { delete[] _x1; }
-	std::cout << "\nMemory freed";
+	std::cout << "\nAllocated memory freed";
 }
 
 void SPH::timestep(float dt) {
@@ -177,11 +180,10 @@ void SPH::timestep(float dt) {
 
 	}
 
-	// applyBoundary();
-
-	// TODO: remove - sleeping only for debugging, simulates longer execution time
+	/*
 	unsigned microseconds = 20000;
 	usleep(microseconds); 
+	*/
 
 }
 
@@ -213,7 +215,7 @@ void SPH::updateForces() {
 			theta = acos(d3/R);
 
 			// Compute Force
-			F = .1*(R>10 ? R : -1000000/R); // TODO: replace by SPH force computation
+			F = (R<10 && R>.001 ? -(10/R*R*R) : 0); // .1*(R>10 ? R : -1000000/R); // TODO: replace by SPH force computation
 
 			// Convert back to cartesian coordinates
 			_a1[i] += F*sin(theta)*cos(phi);
@@ -277,6 +279,9 @@ void SPH::moveBox(float dx, unsigned a) {
 	float xMinWall = -.5*(*xDim);
 	float xMaxWall = +.5*(*xDim);
 
+	std::cout << "\nMINWALL = " << xMinWall;
+	std::cout << "\nMAXWALL = " << xMaxWall;
+
 	// Translate Ghost particles
 	bool hitTheWall = false;
 	for(unsigned i=0; i<_nGhostObject; ++i) {
@@ -315,9 +320,10 @@ float SPH::getEpot() const {
 	for(unsigned i=0; i<_nParticles; ++i) {
 		Egrav += _m[i] * _x2[i];
 	}
-	// TODO: add potential energy of fluid itself
-	Epot = Egrav; // + Einternal
-	return _g*Epot;
+	Egrav *= _g;
+	// TODO: add internal potential energy of fluid
+	float Epot = Egrav; // + Einternal
+	return Epot;
 }
 
 void SPH::setGravity(float g) {

@@ -17,7 +17,7 @@ class SPH {
 
 		enum _axis { X1, X2, X3 };
 
-		static const unsigned _ghostDepth = 1;
+		static const unsigned _ghostDepth = 3;
 		
 		// Constructor
 		SPH(unsigned); 
@@ -116,6 +116,11 @@ class SPH {
 		// Functions for changing Box position
 		void moveBox(float,unsigned);
 
+
+		// Create an interesting object
+		void initObjectCoords();
+		
+
 	private:
 
 		unsigned _nParticles; // Number of fluid particles
@@ -161,6 +166,13 @@ class SPH {
 
 		// Was the Box moved?
 		bool _boxMoved;
+
+
+
+
+		// UIC Object
+		static const unsigned _uicSize = 60;
+		float _uic[3][_uicSize];
 		
 };
 

@@ -31,7 +31,6 @@
 
 
 #include "sphModel.hpp"
-#include "extendedShapes.hpp"
 
 
 
@@ -53,7 +52,7 @@ class Simulation : public RendererLinux {
 
 public:
 
-	static const unsigned N = 40;
+	static const unsigned N = 400;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
@@ -70,14 +69,14 @@ public:
 	Behavior rotateBehavior;
 
 	bool gravityOn;
-
+	bool paused = false;
 
 	SPH fluidsimulation = SPH(N); // Initialize Fluid simulation model with N particles
 		
 	
 
 	enum show { FLUID, FLUIDANDOBJECT, FLUIDANDOBJECTANDWALL };
-	unsigned showParticles = show::FLUID;
+	unsigned showParticles = show::FLUIDANDOBJECTANDWALL;
 	enum ccodes { METABALLS, NONE, SPEED, VELOCITY, PRESSURE, DENSITY };
 	unsigned colorcoding = ccodes::NONE;
 
@@ -94,9 +93,10 @@ public:
 
 		for(unsigned i=0; i<M; ++i) {
 			MeshData md;
-			// addCube(md,fluidsimulation.getRadius(i),vec3(0,0,0));
-			// addRect(md,4.f,4.f,100.f,vec3(0,0,0));
-			addSphere(md,5/*fluidsimulation.getRadius(i)*/,8,8); // TODO: find out what makes it crash here
+			// make sure assertion for r>0 is passed	
+			float r = std::max(fluidsimulation.getRadius(i),.01f);
+			// addCube(md,r);
+			addSphere(md,r,8,8); // TODO: find out what makes it crash here
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -170,7 +170,7 @@ public:
 		}
 
 		// PROPAGATE MODEL AND OUTPUT
-		if(fluidsimulation.getTime() < 10.0) {
+		if(fluidsimulation.getTime() < 10.0 && !paused) {
 		// if(fluidsimulation.getTimeStepNumber() < 10) {
 			fluidsimulation.timestep(.01); // Propagate fluidsimulation in time
 			std::cout << "\nDisplay: " << displayStr << ",\tColorcoding: " << colorcodingStr;
@@ -191,9 +191,16 @@ public:
 		float velocity[3];
 		vec3 normalizedVelocity;
 		float vmax = fluidsimulation.getVmax();
+		unsigned col;
+
+		unsigned Nobj = fluidsimulation.getObjectParticles();
 
 		for(unsigned i=0; i<M; ++i) {
 			program.bind(); {
+
+				col = colorcoding;
+				if(i>=N) col = 101;
+				if(i>=Nobj) col = 102;
 
 				mat4 model = mat4(1.0);
 
@@ -208,7 +215,7 @@ public:
 				glUniformMatrix4fv(program.uniform("view"), 1, 0, ptr(camera.view));
 				glUniformMatrix4fv(program.uniform("proj"), 1, 0, ptr(camera.projection));
 
-				glUniform1i(program.uniform("ccflag"), colorcoding);
+				glUniform1i(program.uniform("ccflag"),col);
 				glUniform3fv(program.uniform("velocity"), 1, ptr(normalizedVelocity));
 				glUniform1f(program.uniform("mass"), fluidsimulation.getMass(i));
 
@@ -281,6 +288,10 @@ public:
 				fluidsimulation.setGravity(-20);
 				gravityOn = true;
 			}
+		
+		// Pause Simulation
+		} else if(key == 'p' || false) {
+			paused = !paused;
 
 		// Switch between colorcoding schemes
 		} else if(key == '0' || false) {
