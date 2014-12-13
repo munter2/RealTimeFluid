@@ -1,7 +1,8 @@
 #version 150 
 uniform mat4 proj, view, model;
-uniform vec3 velocity;
 uniform int ccflag;
+uniform vec3 velocity;
+uniform float mass;
 
 in vec4 vertexPosition, vertexNormal, vertexColor;
 
@@ -27,7 +28,7 @@ void main() {
 			color = vec3(.2,.4,.2); // TODO: implement
 			break;
 		case 5: // DENSITY
-			color = vec3(.4,.2,.2); // TODO: implement
+			color = vec3(.2,mass,.2); // TODO: implement
 			break;
 		default: // NONE
 			color = vec3(.4,.4,1);
