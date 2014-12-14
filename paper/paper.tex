@@ -82,7 +82,7 @@ breaklinks=true,
 \newcommand\tabhead[1]{\small\textbf{#1}}
 
 
-
+\setlength\parindent{12pt}
 
 %\linespread{2}
 
@@ -113,8 +113,7 @@ breaklinks=true,
 	This paper explores the field of Smooth Particle Hydrodynamics (SPH), starting at its 
 beginnings as a tool to simulate astrophysical phenomena and following its evolution and 
 implementation as a way to simulate fluids such as water. We will then give a brief 
-mathematical background and ensuing algorithm of our SPH simulation followed by a detailed 
-explanation of it.
+mathematical background and ensuing algorithm of our SPH simulation followed by a brief explanation of the code and an outlook for possible improvements.
 \end{abstract}
 
 
@@ -127,53 +126,56 @@ Download code at
 	\url{https://github.com/munter2/RealTimeFluid}
 \end{center}
 
-\clearpage
-
 \section{Introduction}
 %
-\hspace{6 pt} Smoothed Particle Hydrodynamics (SPH) successfully simulates fluids by breaking up a 
+Smoothed Particle Hydrodynamics (SPH) successfully simulates fluids by breaking up a 
 fluid body into individual parts, or particles. These particles together form a particle 
-system that simulates various gravitational forces. Fluid movement is simulated in the 
-system by moving particles around any particle moved, simulating a rippling, wave effect.
-\\
-\hspace*{6 pt} The ripple effect is created by first calculating which particles are surrounding 
-a particle moved, and these surrounding particles are moved according to the movement 
-of the first particle moved. But SPH wasn't originally intended to simulate liquid 
-substances, but astrophysical phenomena.
+system that simulates physical properties of the system based on various interaction forces and external forces. 
+The governing equations for fluid movement can be deduced from the governing \emph{Navier Stokes} equations.
+\par\medskip
+However, SPH wasn't originally intended to be used in the simulation of liquid substances, but for investigating astrophysical phenomena.
 %
 
 \section{History}
 %
-\hspace{6 pt} Given all the different applications for Smoothed Particle Hydrodynamics (SPH),
+Given all the different applications for Smoothed Particle Hydrodynamics (SPH),
 it was first used to simulate interstellar phenomena. Conceived in 1977 by Gingold and 
 Monaghan was an improvement to the Standard Finite Difference Method, which until their 
 breakthrough, was the method to use to simulate astrophysical phenomena. They improved 
 on this method by making "use of Lagrangian description of fluid flow which automatically 
 focuses attention on fluid elements" \cite{sphastrophysics}. In this implementation, particles 
 "move according to the Newtonian equations with forces due to the pressure gradient and 
-other body forces: gravity, rotation and magnetic" \cite{sphastrophysics}.
-\\
-\hspace*{6 pt} The set of equations utilized in Gingold and Monaghan's SPH implementation 
+other body forces: gravity, rotation and magnetic" \cite{sphastrophysics}. \\
+From the Lagrangian perspective, the computational elements are not fixed in space, but they move around as particles and carry several physical properties with them.
+\par\medskip
+The set of equations utilized in Gingold and Monaghan's SPH implementation 
 is a density distribution calculated at each point
 \begin{align}
 	\rho_s(r) = \int W(r - r') \rho(r') dr'
 \end{align}
-where W is a function satisfying the condition
+where $W$ is a so called \emph{kernel function} satisfying the normalization condition
 \begin{align}
-\int W(r) dr = 1
+	\int W(r) dr = 1
+	\label{math:kernelnormal}
 \end{align}
-\hspace*{6 pt} This density distribution equation is used to calculate the density of the 
+%
+\par\medskip
+This density distribution equation is used to calculate the density of the 
 particles surrounding the current particle the equation it's being applied to.
-\hspace*{6 pt} A Gaussian function is used for the kernel function, with the form
+\par\medskip
+%
+An example for a kernel function is the Gaussian
 \begin{align}
-(\frac{1}{\pi h^2})^\frac{3}{2}  \exp{(\frac{-r^2}{h^2})}
+ \left( \frac{1}{\pi h^2} \right)^\frac{3}{2}  \exp{(\frac{-r^2}{h^2})}
 \end{align}
-and h is
+where $h$ is
 \begin{align}
-h = b(<r^2> - <r>^2)^\frac{1}{2}
+h = b( \langle r^2 \rangle - \langle r \rangle^2)^\frac{1}{2}
 \end{align}
-and \textit{b} is adjustable.
-\hspace*{6 pt} The gravitational potential of the particles is denoted by
+and $b$ is an adjustable parameter.
+\par\medskip
+%
+The gravitational potential of the particles is denoted by
 \begin{align}
 \phi = - G \int \frac{\rho_N(r')}{|r - r'|} dr'
 \end{align}
@@ -203,26 +205,47 @@ Adding in the Gaussian Function in eq. 3 for W yields
 \end{align}
 This equation is the full solution to calculating the gravitational potential of all particles
 involved in the simulation.
-\\
-\hspace*{6 pt} The result of Gingold and Monaghan's theory and implementation was a robust 
+\par\medskip
+%
+The result of Gingold and Monaghan's theory and implementation was a robust 
 and extendable idea that could easily made more accurate "by increasing the number of particles 
 and by using the devices known to improve Monte Carlo integration methods" \cite{sphastrophysics}.
+\par\medskip
 %
+We would like to point out here the similarity of the kernel function $W$ to the \emph{Dirac Delta} function
+\begin{align*}
+	\delta(x) := 
+	\begin{cases}
+		+ \infty, & x =0 \\
+		0 , & x \neq 0
+	\end{cases}
+\end{align*}
+which is also constrained to satisify the normalization condition
+\begin{align*}
+	\int_{-\infty}^\infty \delta (x) dx = 1
+\end{align*}
+The similarity to the Gaussian function becomes apparent when looking at the limit
+\begin{align*}
+	&\delta_a (x) \xrightarrow{a \rightarrow 0} \delta(x)
+	&\delta_a (x) := \frac{1}{a \sqrt{\pi}} \exp \left\{ \frac{-x^2}{a^2} \right\}
+\end{align*}
+
 
 \section{Smoothed Particle Hydrodynamics Overview}
 %
-\hspace{6 pt} Smoothed-particle hydrodynamics (SPH) method works by dividing the fluid into a set of 
+Smoothed-particle hydrodynamics (SPH) method works by dividing the fluid into a set of 
 referred to as particles. These particles have a spatial distance, or smoothing length, over which 
 their properties are "smoothed" by a kernel function, such as a Gaussian function
 \begin{align}
-(\frac{1}{\pi h^2})^\frac{3}{2}  \exp{(\frac{-r^2}{h^2})}
+\left( \frac{1}{\pi h^2} \right)^\frac{3}{2}  \exp{\left( \frac{-r^2}{h^2} \right)}
 \end{align}
-This means that the physical quantity of any particle can be obtained by summing the 
+This means that the physical quantity of any particle can be obtained by approximating the continuous integral \ref{math:kernelnormal} and summing the 
 relevant properties of all the particles which lie within the range of the kernel. For 
-example, using Monaghan's popular cubic spline kernel the temperature at position r 
+example, using Monaghan's popular cubic spline kernel the temperature at position $r$ 
 depends on the temperatures of all the particles within a radial distance 2h of r \cite{wikiarticle}.
-\\
-\hspace*{6 pt} The contributions of each particle to a property are weighted according to their distance 
+\par\medskip
+%
+The contributions of each particle to a property are weighted according to their distance 
 from the particle of interest, and their density
 A property for any one particle is calculated by discerning how many particles lay within
 smoothing length of a given particle and what their respective properties are, and how 
@@ -235,13 +258,14 @@ although never reaches 0. This is due to intrinsic properties of the
 Gaussian function itself, but it is easy to account for this problem by testing for 
 extremely small values close to zero, and disregarding those particles that are far away 
 from the particle of interest as a result.
-\\
-\hspace*{6 pt} The equation for any quantity A at any point r is given by the equation
+\par\medskip
+%
+In general, the equation for any quantity $A$ at any point $r$ is given by the equation
 \begin{align}
-A(r) = \sum_{j} m_j \frac{a_j}{p_j} W (|r - r_j|,h)
+A(r) = \sum_{j} m_j \frac{a_j}{\rho_j} W (|r - r_j|,h)
 \end{align}
-where m is the mass of particle j, A is the value of the quantity A for particle j, r 
-denotes the position, p is the particle's density and W is a kernel function, such as the 
+where $m$ is the mass of particle $j$, $A$ is the value of the quantity $A$ for particle $j$, $r$ 
+denotes the position, $\rho$ is the particle's density and $W$ is a kernel function, such as the 
 Gaussian function used by Gingold and Monaghan shown in eq. 1. The density of 
 the particle can be computed in a variety of ways, such as the example equation
 \begin{align}
@@ -258,62 +282,21 @@ automatically adapt itself depending on local conditions. For example, in a very
 region where many particles are close together the smoothing length can be made relatively 
 short, yielding high spatial resolution. Conversely, in low-density regions where 
 individual particles are far apart and the resolution is low, the smoothing length can be 
-increased, optimising the computation for the regions of interest. Combined with an 
+increasee, optimising the computation for the regions of interest. Combined with an 
 equation of state and an integrator, SPH can simulate hydrodynamic flows efficiently \cite{wikiarticle}.
-\\
-\hspace*{6 pt} Given the principles of smoothing length, calculating properties based on 
+\par\medskip
+%
+Given the principles of smoothing length, calculating properties based on 
 the area around a particle, and increasing or decreasing a property given the density of 
 particles in an area, we applied some of these concepts in our implementation of SPH.
 %
-
-\section{Mathematical Background}
-%
-\begin{align}
-	a_i^n = \frac{F_i^n}{m_i} = \dots
-	\label{math:acceleration}
-\end{align}
+\clearpage
 
 \section{The Algorithm}
 %
 In the following, we denote the position for the particle $i$ at time $t$ as $x_i^t$, its velocity as $v_i^t$ and its acceleration as $a_i^t$.
 We omit the vector notation ($\boldsymbol{x},\boldsymbol{v},\boldsymbol{a}$) for these quantities, since the following equations are valid for the vectors as well as for each component individually.
-\par\medskip
 %
-
-\balance
-
-\nocite{*}
-\printbibliography
-
-\clearpage
-\begin{comment}
-\clearpage
-
-\section*{Appendix: Code}
-
-\lstinputlisting[caption=sphModel.hpp]{../sphModel.hpp}
-\lstinputlisting[caption=sphModel.cpp]{../sphModel.cpp}
-\lstinputlisting[caption=Simulation.cpp]{../Simulation.cpp}
-\lstinputlisting[caption=simulation.vsh]{../resources/simulation.vsh}
-\lstinputlisting[caption=simulation.fsh]{../resources/simulation.fsh}
-
-\end{comment}
-
-
-
-
-
-
-
-
-
-
-
-
-
-\clearpage
-
-
 Several resources point out the algorithms to be used for applying SPH to Fluid Dynamics, the algorithm is described particularly clearly in \cite{kennyerleben} and can be summarized as follows:
 %
 \FloatBarrier
@@ -357,11 +340,8 @@ The scheme looks as follows:
 	$x_i^{t+\Delta t} = x_i^t + \Delta t v_i^{t+\frac{\Delta t}{2}}$ \;	
 	$a_i^{t + \Delta t} = a_i^{t + \Delta t} (x_i^{t + \Delta t}, m_i)$ from equation \ref{math:acceleration} \;
 \end{algorithm}
-
-
-\clearpage
-
-
+\par\medskip
+%
 As a kernel function we used the standard kernel, the \emph{cubic spline}
 \begin{align*}
 	W_3(r,h) := \frac{1}{\pi h^3}
@@ -428,29 +408,105 @@ The derivative is
 \end{itemize}
 %
 The following two code snippets show how these formulas are implemented in our simulation:
+\FloatBarrier
 \begin{lstlisting}[caption=Cubic Spline]
 // Cubic spline function
 inline float W3(float r, float h) {
 	float W = 0;
-	float zeta = r/h;
-	if(0 <= zeta && zeta <= 2) {
-		W = (zeta < 1 ? 
-				1 - .75*zeta*zeta*(2+zeta) :
-				.25*(2-zeta)*(2-zeta)*(2-zeta)
+	float xi = r/h;
+	if(0 <= xi && xi <= 2) {
+		W = (xi < 1 ? 
+				1 - .75*xi*xi*(2+xi) :
+				.25*(2-xi)*(2-xi)*(2-xi)
 		);
 	}
 	W /= (M_PI*h*h*h);
 	return W;
 }
 \end{lstlisting}
+\FloatBarrier
 %
 \begin{lstlisting}[caption=First Derivative of Cubic Spline]
-Hello World
+// Cubic spline derivative
+inline float d1W3(float r, float h) {
+	float W = 0;
+	float xi = r/h;
+	if(0 <= xi && xi <= 2) {
+		W = (xi < 1 ? 
+				1/(h*h*h*M_PI) * (.75/h*(-4+4*xi+9*xi*xi-3*xi*xi*xi) + .25/r*xi*xi*xi*(12+9*xi)) :
+				.75/h*(2-xi)*(2-xi)*(xi-1)		
+		);
+	}
+	W /= (M_PI*h*h*h);
+	return W;
+}
 \end{lstlisting}
+\FloatBarrier
 %
+\begin{comment}
 \begin{lstlisting}[caption=Second Derivative of Cubic Spline]
 Hello World
 \end{lstlisting}
+\end{comment}
+%
+
+
+\section{Possible Improvements}
+%
+Our Implementation of SPH is not yet suitable for being used as a real time fluid rendering tool.
+The code would be easily extendible to three dimensions, since the simulation already now makes use of all three space dimensions. \\
+However, the code scales pretty badly with the number of particles:
+The number of particles grows exponentially with the number of dimensions and the complexity of the algorithm grows quadratically with the number of particles!
+More sophisticated algorithms must be applied in order to tackle this bottleneck.
+\par\medskip
+%
+Possible improvements for our simulation include
+\begin{itemize}
+	\item Introducing smart data structures that allow to reduce the complexity when looking for nearest neighbors (for example cell lists, spatial hashing, etc.).
+	\item Render the Fluid in an appealing way using metaballs
+	\item 
+\end{itemize}<++>
+
+
+
+\balance
+
+\nocite{*}
+\printbibliography
+
+\clearpage
+\begin{comment}
+\clearpage
+
+\section*{Appendix: Code}
+
+\lstinputlisting[caption=sphModel.hpp]{../sphModel.hpp}
+\lstinputlisting[caption=sphModel.cpp]{../sphModel.cpp}
+\lstinputlisting[caption=Simulation.cpp]{../Simulation.cpp}
+\lstinputlisting[caption=simulation.vsh]{../resources/simulation.vsh}
+\lstinputlisting[caption=simulation.fsh]{../resources/simulation.fsh}
+
+\end{comment}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+
+
+
+\clearpage
+
+
 
 
 
