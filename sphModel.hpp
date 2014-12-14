@@ -173,6 +173,12 @@ class SPH {
 
 		// Array of particle masses
 		float* _m;
+
+		// Array of particle densities
+		float* _rho;
+		
+		// Array of particle pressures
+		float* _p;
 		
 		// Array of particle radii
 		float* _r;
@@ -187,6 +193,7 @@ class SPH {
 		float _damping;
 		float _support;
 		float _h;
+		float _kPressure;
 
 		// Total time
 		float _T;

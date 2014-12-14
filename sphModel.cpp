@@ -25,12 +25,15 @@ SPH::SPH(unsigned N)
 		_a2(new float[_nTotal]),
 		_a3(new float[_nTotal]),
 		_m(new float[_nTotal]),
+		_rho(new float[_nTotal]),
+		_p(new float[_nTotal]),
 		_r(new float[_nTotal]),
 		_vmax(1e-10),
 		_g(0),
 		_damping(.8),
 		_support(10),
 		_h(.5*_support),
+		_kPressure(1),
 		_T(0.0),
 		_tStep(0),
 		_dt(0),
@@ -64,6 +67,8 @@ SPH::SPH(unsigned N)
 		
 		// Masses (assume two groups of particle masses)
 		_m[i] = .5*(1+i%2);
+		_rho[i] = 1;
+		_p[i] = 1;
 
 		// Radius / Support of particles
 		_r[i] = 1; // 1+i%3;
@@ -93,6 +98,7 @@ SPH::SPH(unsigned N)
 	
 		_r[i] = 1;
 		_m[i] = 1;
+		_p[i] = 1;
 
 	}
 	
@@ -116,6 +122,7 @@ SPH::SPH(unsigned N)
 			_v3[zeroIndex+i] = 0;
 
 			_m[zeroIndex+i] = 1e10;
+			_p[zeroIndex+i] = 1;
 			_r[zeroIndex+i] = .4;
 		}
 
@@ -132,6 +139,7 @@ SPH::SPH(unsigned N)
 			_v3[zeroIndex+i] = 0;
 
 			_m[zeroIndex+i] = 1e10;
+			_p[zeroIndex+i] = 1;
 			_r[zeroIndex+i] = .4;
 		}
 	
@@ -141,6 +149,8 @@ SPH::SPH(unsigned N)
 SPH::~SPH() {
 	// Free memory
 	if(_r) { delete[] _r; }
+	if(_p) { delete[] _p; }
+	if(_rho) { delete[] _rho; }
 	if(_m) { delete[] _m; }
 	if(_a3) { delete[] _a3; }
 	if(_a2) { delete[] _a2; }
@@ -224,7 +234,7 @@ void SPH::updateForces() {
 
 			// Compute Force
 			F = 1000*W3(R,_h);
-			// F = (R<10 && R>.001 ? -10/(R*R*R) : 0); // .1*(R>10 ? R : -1000000/R); // TODO: replace by SPH force computation
+			F = (R<10 && R>.001 ? -10/(R*R*R) : 0); // Simple force for testing
 
 			// Convert back to cartesian coordinates
 			_a1[i] += F*sin(theta)*cos(phi);

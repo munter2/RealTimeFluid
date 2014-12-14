@@ -20,6 +20,7 @@
 \usepackage{url}      % llt: nicely formatted URLs
 
 \usepackage{listings}
+\usepackage{placeins}
 
 \lstset{language=C++,
     basicstyle=\footnotesize\ttfamily,
@@ -226,16 +227,6 @@ In the following, we denote the position for the particle $i$ at time $t$ as $x_
 We omit the vector notation ($\boldsymbol{x},\boldsymbol{v},\boldsymbol{a}$) for these quantities, since the following equations are valid for the vectors as well as for each component individually.
 \par\medskip
 %
-As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet} time stepping scheme as follows:
-%
-\begin{algorithm}
-	\caption{Single Timestep with Velocity Verlet Algorithm}
-	\KwData{$x_i^t$, $v_i^{t - \frac{\Delta t}{2}}$, $a_i^t$, $\Delta t$}
-	\KwResult{$x_i^{t + \Delta t}$, $v_i^{t + \frac{\Delta t}{2}}$, $a_i^{t + \Delta t}$}	
-	$v_i^{t+\frac{\Delta t}{2}} = v_i^{t - \frac{\Delta t}{2}} + \Delta t a_i^t$ \;
-	$x_i^{t+\Delta t} = x_i^t + \Delta t v_i^{t+\frac{\Delta t}{2}}$ \;	
-	$a_i^{t + \Delta t} = a_i^{t + \Delta t} (x_i^{t + \Delta t}, m_i)$ from equation \ref{math:acceleration} \;
-\end{algorithm}
 
 \balance
 
@@ -259,6 +250,64 @@ As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet
 
 
 
+
+
+
+
+
+
+
+
+
+\clearpage
+
+
+Several resources point out the algorithms to be used for applying SPH to Fluid Dynamics, the algorithm is described particularly clearly in \cite{kennyerleben} and can be summarized as follows:
+%
+\FloatBarrier
+\begin{algorithm}
+	\caption{SPH simulation}
+	\For{$i = 1, \dots, N_{\text{Particles}}$}{
+		Compute the density of the $i$th particle
+		\begin{align*}
+			\rho_i = \sum_j m_j W(\| x_i - x_j \|, h)
+		\end{align*}
+		Compute the pressure of the $i$th particle
+		\begin{align*}
+			p_i = k (\rho_i - \rho_0)
+		\end{align*}
+		Compute the interaction forces acting on the $i$th particle, consisting of pressure forces, viscosity and gravity
+		\begin{align*}
+			f_i^p &= - \sum_j m_j \frac{p_i + p_j}{2 \rho_j} \nabla W(\| x_i - x_j \|, h) \\
+			f_i^v &= \mu \sum_j m_j \frac{v_j + v_i}{\rho_j} \nabla^2 W(\| x_i - x_j \|, h) \\
+			f_i^{\text{total}} &= f_i^p + f_i^v + g
+		\end{align*}
+		Solve the differential equation
+		\begin{align}
+			\begin{aligned}
+				\dot{x}_i &= v_i \\
+				\dot{v}_i &= \frac{f_i}{\rho_i}
+			\end{aligned}
+			\label{math:ode}
+		\end{align}
+	}
+\end{algorithm}
+\FloatBarrier
+%
+In our implementation, we use the Velocity Verlet (or Leap-Frog) scheme to solve the ODE \ref{math:ode}, as suggested in \cite{generalizedwallboundary}.
+The scheme looks as follows:
+%
+\begin{algorithm}
+	\caption{Single Timestep with Velocity Verlet Algorithm}
+	\KwData{$x_i^t$, $v_i^{t - \frac{\Delta t}{2}}$, $a_i^t$, $\Delta t$}
+	\KwResult{$x_i^{t + \Delta t}$, $v_i^{t + \frac{\Delta t}{2}}$, $a_i^{t + \Delta t}$}	
+	$v_i^{t+\frac{\Delta t}{2}} = v_i^{t - \frac{\Delta t}{2}} + \Delta t a_i^t$ \;
+	$x_i^{t+\Delta t} = x_i^t + \Delta t v_i^{t+\frac{\Delta t}{2}}$ \;	
+	$a_i^{t + \Delta t} = a_i^{t + \Delta t} (x_i^{t + \Delta t}, m_i)$ from equation \ref{math:acceleration} \;
+\end{algorithm}
+
+
+\clearpage
 
 
 As a kernel function we used the standard kernel, the \emph{cubic spline}
@@ -346,6 +395,9 @@ inline float W3(float r, float h) {
 \begin{lstlisting}[caption=Derivative of Cubic Spline]
 Hello World
 \end{lstlisting}
+
+
+
 
 
 
