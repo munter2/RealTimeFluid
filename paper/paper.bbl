@@ -1,5 +1,5 @@
 % $ biblatex auxiliary file $
-% $ biblatex bbl format version 2.3 $
+% $ biblatex bbl format version 2.4 $
 % Do not modify the above lines!
 %
 % This is an auxiliary file used by the 'biblatex' package.
@@ -18,17 +18,17 @@
 
 
 \refsection{0}
-  \sortlist{entry}{nyt}
+  \sortlist{}{}
     \entry{realtimerendering}{book}{}
       \name{labelname}{3}{}{%
-        {{uniquename=0,hash=f6061b73d9bdb8fceb556ed41cd144a6}{Akenine-Möller}{A\bibinithyphendelim M\bibinitperiod}{Tomas}{T\bibinitperiod}{}{}{}{}}%
-        {{uniquename=0,hash=f2cd5883c9757f88d9a81f92ee663907}{Haines}{H\bibinitperiod}{Eric}{E\bibinitperiod}{}{}{}{}}%
-        {{uniquename=0,hash=7042bad71aacbb6b7cedf87450a97a26}{Hoffman}{H\bibinitperiod}{Natty}{N\bibinitperiod}{}{}{}{}}%
+        {{hash=f6061b73d9bdb8fceb556ed41cd144a6}{Akenine-Möller}{A\bibinithyphendelim M\bibinitperiod}{Tomas}{T\bibinitperiod}{}{}{}{}}%
+        {{hash=f2cd5883c9757f88d9a81f92ee663907}{Haines}{H\bibinitperiod}{Eric}{E\bibinitperiod}{}{}{}{}}%
+        {{hash=7042bad71aacbb6b7cedf87450a97a26}{Hoffman}{H\bibinitperiod}{Natty}{N\bibinitperiod}{}{}{}{}}%
       }
       \name{author}{3}{}{%
-        {{uniquename=0,hash=f6061b73d9bdb8fceb556ed41cd144a6}{Akenine-Möller}{A\bibinithyphendelim M\bibinitperiod}{Tomas}{T\bibinitperiod}{}{}{}{}}%
-        {{uniquename=0,hash=f2cd5883c9757f88d9a81f92ee663907}{Haines}{H\bibinitperiod}{Eric}{E\bibinitperiod}{}{}{}{}}%
-        {{uniquename=0,hash=7042bad71aacbb6b7cedf87450a97a26}{Hoffman}{H\bibinitperiod}{Natty}{N\bibinitperiod}{}{}{}{}}%
+        {{hash=f6061b73d9bdb8fceb556ed41cd144a6}{Akenine-Möller}{A\bibinithyphendelim M\bibinitperiod}{Tomas}{T\bibinitperiod}{}{}{}{}}%
+        {{hash=f2cd5883c9757f88d9a81f92ee663907}{Haines}{H\bibinitperiod}{Eric}{E\bibinitperiod}{}{}{}{}}%
+        {{hash=7042bad71aacbb6b7cedf87450a97a26}{Hoffman}{H\bibinitperiod}{Natty}{N\bibinitperiod}{}{}{}{}}%
       }
       \list{location}{1}{%
         {Natick, MA, USA}%
@@ -36,11 +36,10 @@
       \list{publisher}{1}{%
         {A. K. Peters, Ltd.}%
       }
-      \strng{namehash}{7aa7a991850ead043bd39691586612bf}
+      \strng{namehash}{6af483c98f5e495047f6b57fcbd95609}
       \strng{fullhash}{7aa7a991850ead043bd39691586612bf}
       \field{sortinit}{A}
-      \field{labelyear}{2008}
-      \field{datelabelsource}{}
+      \field{sortinithash}{5e89b9e939f9ec8cb95ed52cc8e3381b}
       \field{labeltitle}{Real-Time Rendering 3rd Edition}
       \field{isbn}{987-1-56881-424-7}
       \field{title}{Real-Time Rendering 3rd Edition}
@@ -49,16 +48,15 @@
     \endentry
     \entry{sphastrophysics}{article}{}
       \name{labelname}{1}{}{%
-        {{uniquename=0,hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
+        {{hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
       }
       \name{author}{1}{}{%
-        {{uniquename=0,hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
+        {{hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
       }
       \strng{namehash}{4c157c90ad8b3787896dd5edf545eaa9}
       \strng{fullhash}{4c157c90ad8b3787896dd5edf545eaa9}
       \field{sortinit}{R}
-      \field{labelyear}{1977}
-      \field{datelabelsource}{}
+      \field{sortinithash}{15f0c1d2fa7c1a81eb9fcc02c0688c56}
       \field{labeltitle}{Smoothed Particle Hydrodynamics: Theory and Application to non-spherical Stars}
       \field{journaltitle}{Mon. Not. R. Astron. Soc."}
       \field{number}{375-389}
@@ -67,16 +65,78 @@
     \endentry
     \entry{generalizedwallboundary}{article}{}
       \name{labelname}{1}{}{%
-        {{uniquename=0,hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+        {{hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
       }
       \name{author}{1}{}{%
-        {{uniquename=0,hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+        {{hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
       }
       \strng{namehash}{7e99eed2f3e83051b1bff73aa01cd827}
       \strng{fullhash}{7e99eed2f3e83051b1bff73aa01cd827}
       \field{sortinit}{S}
-      \field{labelyear}{2012}
-      \field{datelabelsource}{}
+      \field{sortinithash}{7545742a552e635d1d9d78916095bd90}
+      \field{labeltitle}{A generalized wall boundary condition for smoothed particle hydrodynamics}
+      \field{journaltitle}{Journal of Computational Physics}
+      \field{number}{231}
+      \field{title}{A generalized wall boundary condition for smoothed particle hydrodynamics}
+      \field{year}{2012}
+    \endentry
+  \endsortlist
+  \sortlist{nyt}{nyt}
+    \entry{realtimerendering}{book}{}
+      \name{labelname}{3}{}{%
+        {{hash=f6061b73d9bdb8fceb556ed41cd144a6}{Akenine-Möller}{A\bibinithyphendelim M\bibinitperiod}{Tomas}{T\bibinitperiod}{}{}{}{}}%
+        {{hash=f2cd5883c9757f88d9a81f92ee663907}{Haines}{H\bibinitperiod}{Eric}{E\bibinitperiod}{}{}{}{}}%
+        {{hash=7042bad71aacbb6b7cedf87450a97a26}{Hoffman}{H\bibinitperiod}{Natty}{N\bibinitperiod}{}{}{}{}}%
+      }
+      \name{author}{3}{}{%
+        {{hash=f6061b73d9bdb8fceb556ed41cd144a6}{Akenine-Möller}{A\bibinithyphendelim M\bibinitperiod}{Tomas}{T\bibinitperiod}{}{}{}{}}%
+        {{hash=f2cd5883c9757f88d9a81f92ee663907}{Haines}{H\bibinitperiod}{Eric}{E\bibinitperiod}{}{}{}{}}%
+        {{hash=7042bad71aacbb6b7cedf87450a97a26}{Hoffman}{H\bibinitperiod}{Natty}{N\bibinitperiod}{}{}{}{}}%
+      }
+      \list{location}{1}{%
+        {Natick, MA, USA}%
+      }
+      \list{publisher}{1}{%
+        {A. K. Peters, Ltd.}%
+      }
+      \strng{namehash}{6af483c98f5e495047f6b57fcbd95609}
+      \strng{fullhash}{7aa7a991850ead043bd39691586612bf}
+      \field{sortinit}{A}
+      \field{sortinithash}{5e89b9e939f9ec8cb95ed52cc8e3381b}
+      \field{labeltitle}{Real-Time Rendering 3rd Edition}
+      \field{isbn}{987-1-56881-424-7}
+      \field{title}{Real-Time Rendering 3rd Edition}
+      \field{year}{2008}
+      \field{pages}{1045}
+    \endentry
+    \entry{sphastrophysics}{article}{}
+      \name{labelname}{1}{}{%
+        {{hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
+      }
+      \name{author}{1}{}{%
+        {{hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
+      }
+      \strng{namehash}{4c157c90ad8b3787896dd5edf545eaa9}
+      \strng{fullhash}{4c157c90ad8b3787896dd5edf545eaa9}
+      \field{sortinit}{R}
+      \field{sortinithash}{15f0c1d2fa7c1a81eb9fcc02c0688c56}
+      \field{labeltitle}{Smoothed Particle Hydrodynamics: Theory and Application to non-spherical Stars}
+      \field{journaltitle}{Mon. Not. R. Astron. Soc."}
+      \field{number}{375-389}
+      \field{title}{Smoothed Particle Hydrodynamics: Theory and Application to non-spherical Stars}
+      \field{year}{1977}
+    \endentry
+    \entry{generalizedwallboundary}{article}{}
+      \name{labelname}{1}{}{%
+        {{hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+      }
+      \name{author}{1}{}{%
+        {{hash=7e99eed2f3e83051b1bff73aa01cd827}{S.\bibnamedelimi Adami}{S\bibinitperiod\bibinitdelim A\bibinitperiod}{N.A.\bibnamedelimi Adams}{N\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{X.Y.\bibnamedelimi Hu}{X\bibinitperiod\bibinitdelim H\bibinitperiod}}%
+      }
+      \strng{namehash}{7e99eed2f3e83051b1bff73aa01cd827}
+      \strng{fullhash}{7e99eed2f3e83051b1bff73aa01cd827}
+      \field{sortinit}{S}
+      \field{sortinithash}{7545742a552e635d1d9d78916095bd90}
       \field{labeltitle}{A generalized wall boundary condition for smoothed particle hydrodynamics}
       \field{journaltitle}{Journal of Computational Physics}
       \field{number}{231}

@@ -54,6 +54,34 @@ class SPH {
 			return _tStep;
 		}
 
+		// Cubic spline function
+		inline float W3(float r, float h) {
+			float W = 0;
+			float xi = r/h;
+			if(0 <= xi && xi <= 2) {
+				W = (xi < 1 ? 
+						1 - .75*xi*xi*(2+xi) :
+						.25*(2-xi)*(2-xi)*(2-xi)
+				);
+			}
+			W /= (M_PI*h*h*h);
+			return W;
+		}
+
+		// Cubic spline derivative
+		inline float deltaW3(float r, float h) {
+			float W = 0;
+			float xi = r/h;
+			if(0 <= xi && xi <= 2) {
+				W = (xi < 1 ? 
+						1/(h*h*h*M_PI) * (.75/h*(-4+4*xi+9*xi*xi-3*xi*xi*xi) + .25/r*xi*xi*xi*(12+9*xi)) :
+						.75/h*(2-xi)*(2-xi)*(xi-1)		
+				);
+			}
+			W /= (M_PI*h*h*h);
+			return W;
+		}
+
 
 
 		// Write position to the 3-array x
@@ -130,6 +158,7 @@ class SPH {
 		unsigned _x3BoxDim;
 		unsigned _nGhostWall; // Number of ghost particles in the walls
 		unsigned _nTotal; // Total number of particles
+		unsigned _nActive;
 
 		// Array of particle coordinates & velocities & accelerations
 		float* _x1;
@@ -156,6 +185,8 @@ class SPH {
 
 		// Damping factor for elastic bounding on walls
 		float _damping;
+		float _support;
+		float _h;
 
 		// Total time
 		float _T;

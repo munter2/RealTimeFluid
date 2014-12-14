@@ -257,4 +257,97 @@ As suggested in \cite{generalizedwallboundary}, we use the \emph{Velocity-Verlet
 \end{comment}
 
 
+
+
+
+
+As a kernel function we used the standard kernel, the \emph{cubic spline}
+\begin{align*}
+	W_3(r,h) := \frac{1}{\pi h^3}
+	\begin{cases}
+		1 - \frac{3}{2} \xi^2 + \frac{3}{4} \xi^3, &\text{for } 0 \le \xi < 1 \\
+		\frac{1}{4} (2-\xi)^3, &\text{for } 1 \le \xi < 2 \\
+		0, &\text{otherwise}
+	\end{cases}
+\end{align*}
+%
+where $\xi := \frac{r}{h}$. It can be seen clearly that the support of this function is $2h$. \\
+The derivative is
+%
+\begin{align*}
+	\nabla W_3(r,h) &= \frac{\partial}{\partial r} W_3(r,h) + \frac{\partial}{\partial h} W_3(r,h)
+\end{align*}
+%
+\begin{itemize}
+	\item for $0 \le \xi < 1$
+		\begin{align*}
+			\frac{\partial}{\partial r} W_3(r,h)|_{0 \le \xi < 1}
+			&= \frac{1}{\pi h^3} \frac{1}{h} \left( 3 \xi + \frac{9}{4} \xi^2 \right)
+		\end{align*}
+		%
+		\begin{align*}
+			\frac{\partial}{\partial h} W_3(r,h)|_{0 \le \xi < 1}
+			&= \frac{-3}{\pi h^4} \left( 1 - \frac{3}{2} \xi^2 + \frac{3}{4} \xi^3 \right) \\
+			&\quad + \frac{1}{\pi h^3} \frac{1}{r} \left( (-2) \frac{3}{2} \xi^3 + (-3)\frac{3}{4} \xi^4 \right) \\
+			&= - \frac{3}{\pi h^4} \left( 1 - \frac{3}{2} \xi^2 + \frac{3}{4} \xi^3 \right) \\
+			&\quad + \frac{1}{\pi h^3} \frac{1}{r} \left( -3 \xi^3 -\frac{9}{4} \xi^4 \right)
+		\end{align*}
+		%
+		\begin{align*}
+			\Rightarrow \nabla W_3(r,h)|_{0 \le \xi < 1}
+		&= \frac{1}{\pi h^4} \left( 3 \xi + \frac{9}{4} \xi^2 \right) \\
+			&- \frac{3}{\pi h^4} \left( 1 - \frac{3}{2} \xi^2 + \frac{3}{4} \xi^3 \right) \\
+			&\quad + \frac{1}{\pi h^3} \frac{1}{r} \left( -3 \xi^3 -\frac{9}{4} \xi^4 \right) \\
+		&= \frac{3}{\pi h^4} \left( -1 + \xi + \frac{9}{4} \xi^2
+			- \frac{3}{4} \xi^3 \right) \\
+			&\quad - \frac{1}{\pi r h^3} \xi^3 \left( 3 + \frac{9}{4} \xi \right)
+	\end{align*}
+	\item for $1 \le \xi < 2$
+		\begin{align*}
+			\frac{\partial}{\partial r} W_3(r,h)|_{1 \le \xi < 2}
+			&= \frac{1}{4} 3(2-\xi)^2 \cdot \left( -\frac{1}{h} \right) \\
+			&= -\frac{3}{4h} (2-\xi)^2
+		\end{align*}
+		%
+		\begin{align*}
+			\frac{\partial}{\partial h} W_3(r,h)|_{1 \le \xi < 2}
+			&= \frac{1}{4} 3(2-\xi)^2 \cdot \left( +\frac{\xi}{h} \right) \\
+			&= \frac{3 \xi}{4 h} (2-\xi)^2
+		\end{align*}
+		\begin{align*}
+			\Rightarrow \nabla W_3(r,h)|_{1 \le \xi < 2}
+			&= -\frac{3}{4h} (2-\xi)^2
+			+ \frac{3 \xi}{4 h} (2-\xi)^2 \\
+			&= \frac{3}{4h} (2-\xi)^2 (\xi - 1)
+		\end{align*}
+	\item otherwise
+		\begin{align*}
+			\nabla W_3(r,h)|_{\text{otherwise}} = 0
+		\end{align*}
+\end{itemize}
+%
+The following two code snippets show how these formulas are implemented in our simulation:
+\begin{lstlisting}[caption=Cubic Spline]
+// Cubic spline function
+inline float W3(float r, float h) {
+	float W = 0;
+	float zeta = r/h;
+	if(0 <= zeta && zeta <= 2) {
+		W = (zeta < 1 ? 
+				1 - .75*zeta*zeta*(2+zeta) :
+				.25*(2-zeta)*(2-zeta)*(2-zeta)
+		);
+	}
+	W /= (M_PI*h*h*h);
+	return W;
+}
+\end{lstlisting}
+%
+\begin{lstlisting}[caption=Derivative of Cubic Spline]
+Hello World
+\end{lstlisting}
+
+
+
+
 \end{document}

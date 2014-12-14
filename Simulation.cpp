@@ -52,7 +52,7 @@ class Simulation : public RendererLinux {
 
 public:
 
-	static const unsigned N = 400;
+	static const unsigned N = 40;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 

@@ -14,6 +14,7 @@ SPH::SPH(unsigned N)
 		_x3BoxDim(100),
 		_nGhostWall(2*(_x2BoxDim+1+_x3BoxDim+1)*_ghostDepth), // keep it 2d
 		_nTotal(_nParticles+_nGhostObject+_nGhostWall),
+		_nActive(0),
 		_x1(new float[_nTotal]),
 		_x2(new float[_nTotal]),
 		_x3(new float[_nTotal]),
@@ -28,6 +29,8 @@ SPH::SPH(unsigned N)
 		_vmax(1e-10),
 		_g(0),
 		_damping(.8),
+		_support(10),
+		_h(.5*_support),
 		_T(0.0),
 		_tStep(0),
 		_dt(0),
@@ -47,17 +50,17 @@ SPH::SPH(unsigned N)
 	// std::random_device rd; // Uncomment to make it even more random ;)
 	// std::mt19937 e2(rd());
 	std::mt19937 e2(42);
-	float mean = 0; // mean velocity
-	float stddev = 4; // standard deviation of velocity
+	float mean = 50; // mean velocity
+	float stddev = 10; // standard deviation of velocity
 	std::normal_distribution<> dist(mean,stddev);
 
 	// Initialize Fluid Particles
 	for(unsigned i=0; i<_nParticles; ++i) {
 		
-		// Position
+		// Position (Locate at source)
 		_x1[i] = 0; // keep it 2d
-		_x2[i] = fmod(rand(),_x2BoxDim)-.5*_x2BoxDim;
-		_x3[i] = fmod(rand(),_x3BoxDim)-.5*_x3BoxDim;
+		_x2[i] = -.45*_x2BoxDim; // fmod(rand(),_x2BoxDim)-.5*_x2BoxDim;
+		_x3[i] = .45*_x3BoxDim; // fmod(rand(),_x3BoxDim)-.5*_x3BoxDim;
 		
 		// Masses (assume two groups of particle masses)
 		_m[i] = .5*(1+i%2);
@@ -71,7 +74,7 @@ SPH::SPH(unsigned N)
 		// Velocities (sampled from random normal distribution)
 		_v1[i] = 0; // keep it 2d
 		_v2[i] = dist(e2);
-		_v3[i] = dist(e2);
+		_v3[i] = 0; // dist(e2);
 
 	}
 
@@ -97,7 +100,6 @@ SPH::SPH(unsigned N)
 
 	// temporary indices for loop
 	unsigned zeroIndex; 
-	unsigned index1height, index2height; 
 
 	for(unsigned d=0; d<_ghostDepth; ++d) {
 		
@@ -154,6 +156,10 @@ SPH::~SPH() {
 
 void SPH::timestep(float dt) {
 
+	if(_nActive < _nParticles && _tStep%5 == 0) {
+		++_nActive;
+	}
+
 	// Update Time counters
 	_dt = dt;
 	_T += _dt;
@@ -164,7 +170,7 @@ void SPH::timestep(float dt) {
 
 	_vmax = 0;
 
-	for(unsigned i=0; i<_nParticles; ++i) {
+	for(unsigned i=0; i<_nActive; ++i) {
 
 		// Update Velocities
 		_v1[i] += _dt*_a1[i];
@@ -194,7 +200,7 @@ void SPH::updateForces() {
 	float theta, phi; // Angles for orientation in 3D space
 	float F; // Force between two particles
 
-	for(unsigned i=0; i<_nParticles; ++i) {
+	for(unsigned i=0; i<_nParticles; ++i) { // TODO: put nActive
 		
 		_a1[i] = 0;
 		_a2[i] = 0;
@@ -210,12 +216,15 @@ void SPH::updateForces() {
 
 			// Compute Spherical Coordinates
 			R = sqrt(d1*d1+d2*d2+d3*d3);
-			if (R == 0) continue; // Avoid infinite values 
+
+			if (R == 0 || R>_support) continue; // Avoid infinite values and particles that are too far away
+
 			phi = atan2(d2,d1);
 			theta = acos(d3/R);
 
 			// Compute Force
-			F = (R<10 && R>.001 ? -(10/R*R*R) : 0); // .1*(R>10 ? R : -1000000/R); // TODO: replace by SPH force computation
+			F = 1000*W3(R,_h);
+			// F = (R<10 && R>.001 ? -10/(R*R*R) : 0); // .1*(R>10 ? R : -1000000/R); // TODO: replace by SPH force computation
 
 			// Convert back to cartesian coordinates
 			_a1[i] += F*sin(theta)*cos(phi);
@@ -232,10 +241,6 @@ void SPH::updateForces() {
 void SPH::applyBoundary() {
 
 	for(unsigned i=0; i<_nParticles; ++i) {
-
-		// Additional velocitiy componentes introduced by box movement
-		float v2Box = 0;
-		float v3Box = 0;
 
 		// Check if the box was moved within the last time interval
 		if(_boxMoved) {
@@ -321,8 +326,8 @@ float SPH::getEpot() const {
 		Egrav += _m[i] * _x2[i];
 	}
 	Egrav *= _g;
-	// TODO: add internal potential energy of fluid
-	float Epot = Egrav; // + Einternal
+	// TODO: add internal potential energy of fluid Einternal
+	float Epot = Egrav + Einternal;
 	return Epot;
 }
 
@@ -335,6 +340,7 @@ ostream& operator<<(ostream& os, const SPH& s) {
 
 	os << "\n==========================================================";
 	os << "\nTime:   " << s._T << "\tTimestep:   " << s._tStep;
+	os << "\nActive particles:\t" << s._nActive;
 	os << "\nGravity:\t" << s._g;
 	os << "\nKinetic Energy:   \t" << s.getEkin();
 	os << "\nPotential Energy: \t" << s.getEpot();

@@ -44,3 +44,6 @@ simulation
 
 # nested git repo
 paper/templates/
+
+# vim swap files
+*.swp
