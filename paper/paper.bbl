@@ -45,6 +45,24 @@
       \field{year}{2008}
       \field{pages}{1045}
     \endentry
+    \entry{kennyerleben}{article}{}
+      \name{labelname}{1}{}{%
+        {{hash=12398c9ec55e3022bf33a128e7ecc0fd}{Erleben}{E\bibinitperiod}{Kenny}{K\bibinitperiod}{}{}{}{}}%
+      }
+      \name{author}{1}{}{%
+        {{hash=12398c9ec55e3022bf33a128e7ecc0fd}{Erleben}{E\bibinitperiod}{Kenny}{K\bibinitperiod}{}{}{}{}}%
+      }
+      \strng{namehash}{12398c9ec55e3022bf33a128e7ecc0fd}
+      \strng{fullhash}{12398c9ec55e3022bf33a128e7ecc0fd}
+      \field{sortinit}{E}
+      \field{labeltitle}{Smoothed Particle Hydrodynamics - A short introduction to Principles and Ideas}
+      \field{journaltitle}{University of Copenhagen}
+      \field{title}{Smoothed Particle Hydrodynamics - A short introduction to Principles and Ideas}
+      \field{year}{2010}
+      \verb{url}
+      \verb http://image.diku.dk/kenny/download/vriphys10_course/sph.pdf
+      \endverb
+    \endentry
     \entry{sphastrophysics}{article}{}
       \name{labelname}{1}{}{%
         {{hash=4c157c90ad8b3787896dd5edf545eaa9}{R.A.\bibnamedelimi Gingold}{R\bibinitperiod\bibinitdelim G\bibinitperiod}{J.J.\bibnamedelimi Monaghan}{J\bibinitperiod\bibinitdelim M\bibinitperiod}{}{}{}{}}%
