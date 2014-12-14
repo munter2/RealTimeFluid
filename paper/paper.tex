@@ -211,7 +211,59 @@ and by using the devices known to improve Monte Carlo integration methods" \cite
 
 \section{Smoothed Particle Hydrodynamics Overview}
 %
-
+\hspace{6 pt} Smoothed-particle hydrodynamics (SPH) method works by dividing the fluid into a set of 
+referred to as particles. These particles have a spatial distance, or smoothing length, over which 
+their properties are "smoothed" by a kernel function, such as a Gaussian function
+\begin{align}
+(\frac{1}{\pi h^2})^\frac{3}{2}  \exp{(\frac{-r^2}{h^2})}
+\end{align}
+This means that the physical quantity of any particle can be obtained by summing the 
+relevant properties of all the particles which lie within the range of the kernel. For 
+example, using Monaghan's popular cubic spline kernel the temperature at position r 
+depends on the temperatures of all the particles within a radial distance 2h of r \cite{wikiarticle}.
+\\
+\hspace*{6 pt} The contributions of each particle to a property are weighted according to their distance 
+from the particle of interest, and their density
+A property for any one particle is calculated by discerning how many particles lay within
+smoothing length of a given particle and what their respective properties are, and how 
+dense that smoothing length is around the particle of interest. Mathematically, this is 
+governed by a kernel function, like the Gaussian function given in eq. 1. This Gaussian
+function gives large numbers for particles whose smoothing lengths are close to the 
+particle of interest, and thus effect the calculation of a given particles properties, 
+but as particles get far away, and their smoothing length becomes extremely small, 
+although never reaches 0. This is due to intrinsic properties of the 
+Gaussian function itself, but it is easy to account for this problem by testing for 
+extremely small values close to zero, and disregarding those particles that are far away 
+from the particle of interest as a result.
+\\
+\hspace*{6 pt} The equation for any quantity A at any point r is given by the equation
+\begin{align}
+A(r) = \sum_{j} m_j \frac{a_j}{p_j} W (|r - r_j|,h)
+\end{align}
+where m is the mass of particle j, A is the value of the quantity A for particle j, r 
+denotes the position, p is the particle's density and W is a kernel function, such as the 
+Gaussian function used by Gingold and Monaghan shown in eq. 1. The density of 
+the particle can be computed in a variety of ways, such as the example equation
+\begin{align}
+p_i = p(r_i) = \sum_{j} m_j \frac{p_j}{p_j} W (|r_i - r_i|,h) = \sum_{j} m_j W(r_i - r_j,h)
+\end{align}
+Similarly, the spatial derivative of a quantity can be computed as follows
+\begin{align}
+\triangledown A(r) = \sum_{j} m_j \frac{a}{p_j} \triangledown W(|r - r_j|, h)
+\end{align}
+Although the size of the smoothing length can be fixed in both space and time, this does 
+not take advantage of the full power of SPH. By assigning each particle its own smoothing 
+length and allowing it to vary with time, the resolution of a simulation can be made to 
+automatically adapt itself depending on local conditions. For example, in a very dense 
+region where many particles are close together the smoothing length can be made relatively 
+short, yielding high spatial resolution. Conversely, in low-density regions where 
+individual particles are far apart and the resolution is low, the smoothing length can be 
+increased, optimising the computation for the regions of interest. Combined with an 
+equation of state and an integrator, SPH can simulate hydrodynamic flows efficiently \cite{wikiarticle}.
+\\
+\hspace*{6 pt} Given the principles of smoothing length, calculating properties based on 
+the area around a particle, and increasing or decreasing a property given the density of 
+particles in an area, we applied some of these concepts in our implementation of SPH.
 %
 
 \section{Mathematical Background}
