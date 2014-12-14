@@ -123,7 +123,7 @@ SPH::SPH(unsigned N)
 			_v2[zeroIndex+i] = 0;
 			_v3[zeroIndex+i] = 0;
 
-			_m[zeroIndex+i] = 1;
+			_m[zeroIndex+i] = 1e3;
 			_p[zeroIndex+i] = 1;
 			_r[zeroIndex+i] = .4;
 		}
@@ -217,13 +217,14 @@ void SPH::updateDensityPressure() {
 		_rho[i] = 0;
 		_p[i] = 0;
 
-		for(unsigned a=0; a<_nTotal; ++a) {
+		for(unsigned j=0; j<_nTotal; ++j) {
+		
+			if(j < _nParticles && j > _nActive) continue; // Don't interact with inactive particles
+			if(j == i) continue; // Particles don't interact with themselves
 			
-			if(a == i) continue; // Particles don't interact with themselves
-			
-			d1 = _x1[a] - _x1[i];
-			d2 = _x2[a] - _x2[i];
-			d3 = _x3[a] - _x3[i];
+			d1 = _x1[j] - _x1[i];
+			d2 = _x2[j] - _x2[i];
+			d3 = _x3[j] - _x3[i];
 
 			R = sqrt(d1*d1+d2*d2+d3*d3);
 
@@ -255,6 +256,7 @@ void SPH::updateForces() {
 
 		for(unsigned j=0; j<_nTotal; ++j) {
 			
+			if(j < _nParticles && j > _nActive) continue; // Don't interact with inactive particles
 			if(j == i) continue; // Particles don't interact with themselves
 			
 			d1 = _x1[j] - _x1[i];
@@ -270,8 +272,8 @@ void SPH::updateForces() {
 			theta = acos(d3/R);
 
 			// Compute Force
-			Fp = (_rho[j] != 0 ? _m[j]*(_p[i]+_p[j])/(2*_rho[j]) * d1W3(R,_h) : 0); // TODO: uncomment
-			Fv = 0; // _mu*_m[j]*(_v[j]+_v[i])/_rho[j] * d2W3(R,_h); // TODO: uncomment
+			Fp = (_rho[j] != 0 ? _m[j]*(_p[i]+_p[j])/(2*_rho[j]) * d1W3(R,_h) : 0);
+			Fv = 0; // _mu*_m[j]*(_v[j]+_v[i])/_rho[j] * d2W3(R,_h); // TODO: implement d2w3
 			F = Fp + Fv;			
 			F *= 100;
 
@@ -286,20 +288,6 @@ void SPH::updateForces() {
 		_a2[i] = f2/_m[i];
 		_a3[i] = f3/_m[i] + _g; // add gravity
 	
-	}
-
-}
-
-
-void SPH::applyBoundary() {
-
-	for(unsigned i=0; i<_nParticles; ++i) {
-
-		// Check if the box was moved within the last time interval
-		if(_boxMoved) {
-			_boxMoved = false; // movement of box has been considered, set to false now
-		}
-
 	}
 
 }

@@ -37,9 +37,6 @@ class SPH {
 		// Overloading Output Operator
 		friend ostream& operator<<(ostream&, const SPH&);
 
-		// Applying elastic boundary conditions
-		void applyBoundary();
-
 		// Get number of particles
 		inline unsigned getFluidParticles() const {
 			return _nParticles;

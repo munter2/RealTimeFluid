@@ -50,7 +50,7 @@ class Simulation : public RendererLinux {
 
 public:
 
-	static const unsigned N = 4;
+	static const unsigned N = 400;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
@@ -94,7 +94,7 @@ public:
 			// make sure assertion for r>0 is passed	
 			float r = std::max(fluidsimulation.getRadius(i),.01f);
 			// addCube(md,r);
-			addSphere(md,r,8,8); // TODO: find out what makes it crash here
+			addSphere(md,r,8,8);
 			mb[i].init(md,posLoc,normalLoc,-1,colLoc);
 		}
 
@@ -168,7 +168,8 @@ public:
 		}
 
 		// PROPAGATE MODEL AND OUTPUT
-		if(fluidsimulation.getTime() < 10.0 && !paused) {
+		if(!paused) {
+		// if(fluidsimulation.getTime() < 10.0 && !paused) {
 		// if(fluidsimulation.getTimeStepNumber() < 10 && !paused) {
 			fluidsimulation.timestep(.01); // Propagate fluidsimulation in time
 			std::cout << "\nDisplay: " << displayStr << ",\tColorcoding: " << colorcodingStr;
@@ -283,7 +284,7 @@ public:
 				fluidsimulation.setGravity(0);
 				gravityOn = false;
 			} else {
-				fluidsimulation.setGravity(-20);
+				fluidsimulation.setGravity(-200);
 				gravityOn = true;
 			}
 		
