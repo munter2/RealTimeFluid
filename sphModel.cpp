@@ -34,6 +34,8 @@ SPH::SPH(unsigned N)
 		_support(10),
 		_h(.5*_support),
 		_kPressure(1),
+		_rho0(1),
+		_mu(0),
 		_T(0.0),
 		_tStep(0),
 		_dt(0),
@@ -121,7 +123,7 @@ SPH::SPH(unsigned N)
 			_v2[zeroIndex+i] = 0;
 			_v3[zeroIndex+i] = 0;
 
-			_m[zeroIndex+i] = 1e10;
+			_m[zeroIndex+i] = 1;
 			_p[zeroIndex+i] = 1;
 			_r[zeroIndex+i] = .4;
 		}
@@ -138,7 +140,7 @@ SPH::SPH(unsigned N)
 			_v2[zeroIndex+i] = 0;
 			_v3[zeroIndex+i] = 0;
 
-			_m[zeroIndex+i] = 1e10;
+			_m[zeroIndex+i] = 1;
 			_p[zeroIndex+i] = 1;
 			_r[zeroIndex+i] = .4;
 		}
@@ -175,7 +177,8 @@ void SPH::timestep(float dt) {
 	_T += _dt;
 	++_tStep;
 
-	// Update Forces
+	// Update Parameters
+	updateDensityPressure();
 	updateForces();
 
 	_vmax = 0;
@@ -203,26 +206,60 @@ void SPH::timestep(float dt) {
 
 }
 
-void SPH::updateForces() {
+void SPH::updateDensityPressure() {
 
 	float d1, d2, d3; // Particle Distance in each space direction
 	float R; // Particle Distance in 3D space
-	float theta, phi; // Angles for orientation in 3D space
-	float F; // Force between two particles
 
-	for(unsigned i=0; i<_nParticles; ++i) { // TODO: put nActive
-		
-		_a1[i] = 0;
-		_a2[i] = 0;
-		_a3[i] = 0;
+	// Compute density and prassure
+	for(unsigned i=0; i<_nTotal; ++i) {
+
+		_rho[i] = 0;
+		_p[i] = 0;
 
 		for(unsigned a=0; a<_nTotal; ++a) {
-
+			
 			if(a == i) continue; // Particles don't interact with themselves
 			
 			d1 = _x1[a] - _x1[i];
 			d2 = _x2[a] - _x2[i];
 			d3 = _x3[a] - _x3[i];
+
+			R = sqrt(d1*d1+d2*d2+d3*d3);
+
+			if (R == 0 || R>_support) continue; // Avoid infinite values and particles that are too far away
+
+			_rho[i] += _m[i] * d1W3(R,_h);
+			_p[i] += _kPressure*(_rho[i] - _rho0);
+			
+		}
+	}
+
+}
+
+
+void SPH::updateForces() {
+
+	float d1, d2, d3; // Particle Distance in each space direction
+	float R; // Particle Distance in 3D space
+	float theta, phi; // Angles for orientation in 3D space
+	float f1, f2, f3; // Force components per direction
+	float Fp, Fv, F; // Different forces
+	
+	// Compute Force
+	for(unsigned i=0; i<_nParticles; ++i) {
+
+		f1 = 0;
+		f2 = 0;
+		f3 = 0;
+
+		for(unsigned j=0; j<_nTotal; ++j) {
+			
+			if(j == i) continue; // Particles don't interact with themselves
+			
+			d1 = _x1[j] - _x1[i];
+			d2 = _x2[j] - _x2[i];
+			d3 = _x3[j] - _x3[i];
 
 			// Compute Spherical Coordinates
 			R = sqrt(d1*d1+d2*d2+d3*d3);
@@ -233,18 +270,24 @@ void SPH::updateForces() {
 			theta = acos(d3/R);
 
 			// Compute Force
-			F = 1000*W3(R,_h);
-			F = (R<10 && R>.001 ? -10/(R*R*R) : 0); // Simple force for testing
+			Fp = (_rho[j] != 0 ? _m[j]*(_p[i]+_p[j])/(2*_rho[j]) * d1W3(R,_h) : 0); // TODO: uncomment
+			Fv = 0; // _mu*_m[j]*(_v[j]+_v[i])/_rho[j] * d2W3(R,_h); // TODO: uncomment
+			F = Fp + Fv;			
+			F *= 100;
 
 			// Convert back to cartesian coordinates
-			_a1[i] += F*sin(theta)*cos(phi);
-			_a2[i] += F*sin(theta)*sin(phi);
-			_a3[i] += F*cos(theta);
+			f1 += F*sin(theta)*cos(phi);
+			f2 += F*sin(theta)*sin(phi);
+			f3 += F*cos(theta);
 			
 		}
+		
 		_a1[i] = 0; // Keep it 2d
-		_a3[i] += _g; // add gravity
+		_a2[i] = f2/_m[i];
+		_a3[i] = f3/_m[i] + _g; // add gravity
+	
 	}
+
 }
 
 
@@ -358,6 +401,20 @@ ostream& operator<<(ostream& os, const SPH& s) {
 	unsigned nOutput = 1; // Only output first particle
 	// unsigned nOutput = s._nParticles; // All particles
 
+
+	os << "\nMass:\t\t| ";
+	for(unsigned i=0; i<nOutput; ++i) {
+		printf("  %36.4f | ", s._m[i]);
+	}
+	os << "\nDensity:\t| ";
+	for(unsigned i=0; i<nOutput; ++i) {
+		printf("  %36.4f | ", s._rho[i]);
+	}
+	os << "\nPressure:\t| ";
+	for(unsigned i=0; i<nOutput; ++i) {
+		printf("  %36.4f | ", s._p[i]);
+	}
+	
 	os << "\nPosition:\t| ";
 	for(unsigned i=0; i<nOutput; ++i) {
 		printf("%12.4f %12.4f %12.4f | ", s._x1[i], s._x2[i], s._x3[i]);

@@ -43,8 +43,6 @@ float pi = glm::pi<float>();
 using namespace aluminum;
 
 
-// TODO: improve performance by only adding one single sphere instead of N spheres (just use different model matrices).
-// TODO: make liquid flow in from top
 // TODO: pass in only points to shader and use geometry shader to create 3d particles
 // TODO: see 3.5.1: flowing water and particle effects, stream output
 
@@ -52,7 +50,7 @@ class Simulation : public RendererLinux {
 
 public:
 
-	static const unsigned N = 40;
+	static const unsigned N = 4;
 	unsigned M = 0;
 		
 	ResourceHandler rh; 
@@ -171,7 +169,7 @@ public:
 
 		// PROPAGATE MODEL AND OUTPUT
 		if(fluidsimulation.getTime() < 10.0 && !paused) {
-		// if(fluidsimulation.getTimeStepNumber() < 10) {
+		// if(fluidsimulation.getTimeStepNumber() < 10 && !paused) {
 			fluidsimulation.timestep(.01); // Propagate fluidsimulation in time
 			std::cout << "\nDisplay: " << displayStr << ",\tColorcoding: " << colorcodingStr;
 			std::cout << fluidsimulation; // Output current status of Fluid particles

@@ -30,6 +30,9 @@ class SPH {
 		
 		// Update forces on particles based on SPH
 		void updateForces();
+		
+		// Update density and pressure based on SPH
+		void updateDensityPressure();
 
 		// Overloading Output Operator
 		friend ostream& operator<<(ostream&, const SPH&);
@@ -69,7 +72,21 @@ class SPH {
 		}
 
 		// Cubic spline derivative
-		inline float deltaW3(float r, float h) {
+		inline float d1W3(float r, float h) {
+			float W = 0;
+			float xi = r/h;
+			if(0 <= xi && xi <= 2) {
+				W = (xi < 1 ? 
+						1/(h*h*h*M_PI) * (.75/h*(-4+4*xi+9*xi*xi-3*xi*xi*xi) + .25/r*xi*xi*xi*(12+9*xi)) :
+						.75/h*(2-xi)*(2-xi)*(xi-1)		
+				);
+			}
+			W /= (M_PI*h*h*h);
+			return W;
+		}
+		
+		// Cubic spline second derivative
+		inline float d2W3(float r, float h) {
 			float W = 0;
 			float xi = r/h;
 			if(0 <= xi && xi <= 2) {
@@ -194,6 +211,8 @@ class SPH {
 		float _support;
 		float _h;
 		float _kPressure;
+		float _rho0; // Environment pressure
+		float _mu; // Viscosity
 
 		// Total time
 		float _T;
